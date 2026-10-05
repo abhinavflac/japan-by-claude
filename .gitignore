@@ -1,0 +1,7 @@
+export/
+export_log.txt
+node_modules/
+_chrome/
+_prof/
+*.mp4
+*.wav
