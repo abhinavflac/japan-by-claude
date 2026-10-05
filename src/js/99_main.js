@@ -99,7 +99,7 @@ function renderNow(dtReal) {
   STATE.look = look;
   applyCamera(o);
   attachments(o);
-  updateRain(camera, o.rain);
+  updateRain(camera, o.rain * (FILTERS[POST.filter].rain ?? 1));
   FX.drips.material.uniforms.uCam.value.copy(camera.position);
   const wide = clamp((35 - o.mm) / 20, 0, 1);
   const cctvActive = look.cctv > 0.99 && !SEQ.tr && !SEQ.explore;
@@ -112,6 +112,9 @@ function renderNow(dtReal) {
     cctv: look.cctv, glitch: look.glitch, wipe: look.wipe, wipeDir: look.wipeDir, fade: look.fade, drops: look.drops,
     refl: true, reflPlane: o.reflPlane, hold, cut: SEQ.cutFlag || look.cut, dof: DEBUG.dof, debugView: DEBUG.view,
   };
+  const flt = FILTERS[POST.filter];
+  if (flt.P) for (const k in flt.P) P[k] = k === 'exposure' ? P[k] * flt.P[k] : flt.P[k];
+  P.filter = POST.filter;
   if (DEBUG.raw) { P.bloom = 0; P.halation = 0; P.grain = 0; P.vignette = 0; P.ca = 0; P.mb = 0; }
   pipeline.render(camera, P);
   SEQ.cutFlag = false;
@@ -166,6 +169,7 @@ async function boot() {
     COMP = buildCompanions();
     buildHero();
     buildBikes();
+    tagWarmBodies();
     finishAtlases();
     progress('Light…', 0.74); await tick();
     bakeLightField(); buildLights();
@@ -186,6 +190,7 @@ async function boot() {
     camera.layers.enableAll();
     renderer.setRenderTarget(pipeline.sceneRT);
     try { await renderer.compileAsync(scene, camera); } catch (e) { renderer.compile(scene, camera); }
+    FSQ.draw(pipeline.mats.filter, pipeline.ldrRT);   // the looks pass too, so the first switch doesn't stall
     camera.layers.set(0); camera.layers.enable(LAYER_NOREFL);
     progress('Lighting the street…', 0.9); await tick();
     captureEnvironment([FX.rain, FX.drips, FX.steam, FX.halos, FX.lanterns]);
@@ -230,6 +235,7 @@ if (TEST) {
     DEBUG.dof = opts.dof !== false; DEBUG.raw = !!opts.raw; DEBUG.halos = opts.halos !== false; DEBUG.rain = opts.rain !== false;
     FX.halos.visible = DEBUG.halos; FX.rain.visible = DEBUG.rain; FX.sigHalo.visible = DEBUG.halos;
     if (opts.exposure) window.__exp = opts.exposure;
+    setFilter(opts.filter == null ? 0 : typeof opts.filter === 'string' ? FILTER_ID[opts.filter] : opts.filter, true);
     UI.onShot(i, false);
     SEQ.cutFlag = true;
     renderNow(1 / 60);

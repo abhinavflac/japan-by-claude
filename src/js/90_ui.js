@@ -26,6 +26,16 @@ function initUI() {
     idx.appendChild(row);
   });
   UI.chips = [...strip.children]; UI.rows = [...idx.children];
+  // looks
+  FILTERS.forEach((f, i) => {
+    const r = document.createElement('button');
+    r.className = 'look-row'; r.innerHTML = `<span class="no"></span><span class="nm">${f.name}</span><span class="jp">${f.jp}</span>`;
+    r.addEventListener('click', () => { setFilter(i); toggleLooks(false); });
+    $('lookrows').appendChild(r);
+  });
+  UI.lookRows = [...$('lookrows').children];
+  $('btn-look').addEventListener('click', () => toggleLooks());
+  setFilter(POST.filter, true);
   // transport
   $('btn-play').addEventListener('click', togglePlay);
   $('btn-prev').addEventListener('click', () => gotoShot(SEQ.idx - 1));
@@ -56,11 +66,12 @@ function initUI() {
     else if (k === 't' || k === 'T') toggleTransitions();
     else if (k === 'a' || k === 'A') $('btn-auto').click();
     else if (k === 'e' || k === 'E') { if (!e.repeat) SEQ.explore ? exitExplore() : enterExplore(); }
-    else if (k === 'Escape') { if (SEQ.explore) exitExplore(); else if (!$('help').hidden) $('help').hidden = true; else if (!$('index').hidden) toggleIndex(false); }
+    else if (k === 'Escape') { if (SEQ.explore) exitExplore(); else if (!$('help').hidden) $('help').hidden = true; else if (!$('looks').hidden) toggleLooks(false); else if (!$('index').hidden) toggleIndex(false); }
     else if (k === 'h' || k === 'H') toggleUI();
     else if (k === 'f' || k === 'F') toggleFullscreen();
     else if (k === 'm' || k === 'M') toggleMap();
     else if (k === 'c' || k === 'C') toggleIndex();
+    else if (k === 'v' || k === 'V') setFilter(POST.filter + (e.shiftKey ? -1 : 1));
     else if (k === 's' || k === 'S') { if (!SEQ.explore) toggleSound(); }
     else if (k === '[') setSpeed(SEQ.speed <= 0.25 ? 0.25 : SEQ.speed / 2);
     else if (k === ']') setSpeed(SEQ.speed >= 2 ? 2 : SEQ.speed * 2);
@@ -145,6 +156,18 @@ function toggleIndex(force) {
   const el = $('index'); el.hidden = force == null ? !el.hidden : !force;
   $('btn-index').setAttribute('aria-pressed', !el.hidden);
 }
+function toggleLooks(force) {
+  const el = $('looks'); el.hidden = force == null ? !el.hidden : !force;
+  $('btn-look').setAttribute('aria-expanded', !el.hidden);
+}
+function setFilter(i, quiet) {
+  POST.filter = (i + FILTERS.length) % FILTERS.length;
+  const f = FILTERS[POST.filter];
+  $('btn-look').textContent = f.name;
+  $('btn-look').setAttribute('aria-label', `Look: ${f.name}`);
+  UI.lookRows.forEach((r, j) => r.classList.toggle('on', j === POST.filter));
+  if (!quiet) toast(`${f.name} · ${f.jp}`);
+}
 function toggleMap() {
   const el = $('mapwrap'); el.hidden = !el.hidden;
   $('btn-map').setAttribute('aria-pressed', !el.hidden);
@@ -198,6 +221,10 @@ function updateHUD() {
   const cc = !!(STATE.look && STATE.look.cctv > 0.5);
   if ($('cctv').hidden === cc) $('cctv').hidden = !cc;
   if (cc) $('cctv-date').textContent = `2026-10-04 ${p2(hh)}:${p2(mm)}:${p2(ss)}`;
+  const flt = FILTERS[POST.filter].id;
+  if ($('osd').hidden === (flt === 'vhs')) $('osd').hidden = flt !== 'vhs';
+  if ($('thermhud').hidden === (flt === 'thermal')) $('thermhud').hidden = flt !== 'thermal';
+  if (flt === 'vhs') $('osd-time').textContent = `${hh < 12 ? 'AM' : 'PM'} ${(hh + 11) % 12 + 1}:${p2(mm)}:${p2(ss)}`;
   const i = SEQ.tr ? SEQ.tr.to : SEQ.idx;
   const prog = SEQ.tr ? 0 : clamp(SEQ.t / shotDur(SEQ.idx), 0, 1);
   const chip = UI.chips[i];
