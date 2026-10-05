@@ -85,6 +85,7 @@ function frame(now) {
   STATE.realT += dtReal;
   updateSequencer(dtReal);
   const T = SEQ.world;
+  if (WALK.on) updateWalk(dtReal, T);
   U.uTime.value = T;
   updateWorld(T);
   renderNow(dtReal);
@@ -108,7 +109,7 @@ function renderNow(dtReal) {
   const P = {
     time: STATE.realT, exposure: o.exposure * BASE_EXPOSURE * (window.__exp || 1), focal: o.mm, fstop: o.T, focus: o.focus,
     bloom: 0.07, halation: 0.025, vignette: 0.34 + wide * 0.1, grain: (FILM.on ? 0.006 : 0.018) + (cctvActive ? 0.04 : 0), ca: 0.0007 + wide * 0.0012,
-    distort: look.distort, mb: REDUCED_MOTION ? 0 : clamp((1 / 48) / Math.max(dtReal, 1 / 240), 0, 1.6), sat: 1.06,
+    distort: look.distort, mb: REDUCED_MOTION ? 0 : clamp((1 / 48) / Math.max(dtReal, 1 / 240), 0, 1.6) * (WALK.on ? 0.4 : 1), sat: 1.06,
     cctv: look.cctv, glitch: look.glitch, wipe: look.wipe, wipeDir: look.wipeDir, fade: look.fade, drops: look.drops,
     refl: true, reflPlane: o.reflPlane, hold, cut: SEQ.cutFlag || look.cut, dof: DEBUG.dof, debugView: DEBUG.view,
   };
@@ -166,7 +167,7 @@ async function boot() {
     for (const wb of WALLS.values()) { const m = wb.build(winMat); if (m) scene.add(m); }
     buildACUnits();
     progress('People…', 0.64); await tick();
-    initCrowd([...buildCrowd(), ...riderAgents()]);
+    initCrowd([...buildCrowd(), ...riderAgents(), playerAgent()]);
     COMP = buildCompanions();
     buildHero();
     buildBikes();
@@ -279,6 +280,30 @@ if (TEST) {
     return { type: SEQ.tr ? SEQ.tr.type : 'none', dur: SEQ.tr ? +SEQ.tr.dur.toFixed(2) : 0, pos: currentPose.pos.toArray().map(v => +v.toFixed(2)), path: SEQ.tr && SEQ.tr.path ? SEQ.tr.path.map(q => q.toArray().map(v => +v.toFixed(1))) : null };
   };
   window.__film = { init: filmInit, frame: filmFrame, audio: filmAudio, chunk: filmAudioChunk };
+  // a still of the walking view: the person at (x, z) looking along yaw/pitch, the camera `dist` behind
+  window.__walk = async (x, z, yaw = 0, pitch = -0.1, dist = 2.6, t = 20, opts = {}) => {
+    SEQ.world = t; U.uTime.value = t; updateWorld(t);
+    document.getElementById('intro').style.display = 'none';
+    if (opts.hideUI) $('app').classList.add('uihidden');
+    if (!!opts.day !== DAY.on) setDay(!!opts.day);
+    setFilter(opts.filter == null ? 0 : FILTER_ID[opts.filter], true);
+    enterWalk();
+    Object.assign(WALK, { x, z, y: walkGround(x, z), yaw, pitch, dist, distS: dist, vx: 0, vy: 0, vz: 0, phase: opts.phase || 0, crouch: opts.crouch || 0, air: opts.air || 0 });
+    WALK.body = opts.body ?? yaw;
+    if (opts.v) { WALK.vx = Math.sin(WALK.body) * opts.v; WALK.vz = Math.cos(WALK.body) * opts.v; }
+    const v = [WALK.vx, WALK.vz]; updateWalk(1 / 60, t); [WALK.vx, WALK.vz] = v;
+    updateWorld(t); renderNow(1 / 60); renderNow(1 / 60);
+    await new Promise(r => requestAnimationFrame(() => r()));
+    return { x: +WALK.x.toFixed(2), y: +WALK.y.toFixed(3), z: +WALK.z.toFixed(2) };
+  };
+  // hold keys for a while at 60 Hz, without rendering, and report where the walker got to after each step
+  window.__walkSim = (steps, t = 20) => steps.map(([keys, secs]) => {
+    WALK.keys = Object.fromEntries(keys.map(k => [k, true]));
+    let top = WALK.y;
+    for (let i = 0; i < Math.round(secs * 60); i++) { updateWalk(1 / 60, t); top = Math.max(top, WALK.y); }
+    WALK.keys = {};
+    return { keys: keys.join('+'), x: +WALK.x.toFixed(2), y: +WALK.y.toFixed(3), z: +WALK.z.toFixed(2), top: +top.toFixed(2), grounded: WALK.grounded };
+  });
   window.__explore = async (pos, target, t = 20) => {
     SEQ.world = t; U.uTime.value = t; updateWorld(t);
     enterExplore();

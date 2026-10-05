@@ -1,6 +1,7 @@
 // Headless stills via the Chrome DevTools protocol.
 // node tools/shoot.mjs <outDir> '<json shots>' [width] [height] [query]
-// A shot is { cam, u, t, opts, name } for a camera, or { explore: [pos, target], t, name } for the free camera;
+// A shot is { cam, u, t, opts, name } for a camera, { explore: [pos, target], t, name } for the free camera,
+// or { walk: [x, z, yaw, pitch, dist], t, opts, name } for the walking view;
 // eval (an expression) runs after the frame is set up and before the capture, e.g. to open a panel.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -19,6 +20,7 @@ try {
   for (const s of shots) {
     const ts = Date.now();
     const expr = s.explore ? `window.__explore(${JSON.stringify(s.explore[0])}, ${JSON.stringify(s.explore[1])}, ${s.t ?? 20}, ${JSON.stringify(s.opts || {})})`
+      : s.walk ? `window.__walk(${s.walk.join(', ')}, ${s.t ?? 20}, ${JSON.stringify(s.opts || {})})`
       : `window.__shot(${s.cam}, ${s.u ?? 0.5}, ${s.t ?? 20}, ${JSON.stringify(s.opts || {})})`;
     let r;
     try { r = JSON.stringify(await page.evaluate(expr)); if (s.eval) r += ' ' + JSON.stringify(await page.evaluate(s.eval)); } catch (e) { r = 'EXC ' + e.message; }

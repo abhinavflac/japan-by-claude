@@ -44,16 +44,26 @@ function initUI() {
   for (const id of ['spd-25', 'spd-50', 'spd-100', 'spd-200']) $(id).addEventListener('click', e => setSpeed(+e.currentTarget.dataset.s));
   $('btn-trans').addEventListener('click', toggleTransitions);
   $('btn-auto').addEventListener('click', () => { SEQ.auto = !SEQ.auto; $('btn-auto').setAttribute('aria-pressed', SEQ.auto); toast(SEQ.auto ? 'Auto-advance on' : 'Holding this camera'); });
-  $('btn-explore').addEventListener('click', () => SEQ.explore ? exitExplore() : enterExplore());
+  $('btn-explore').addEventListener('click', () => WALK.on ? walkToOrbit() : SEQ.explore ? exitExplore() : enterExplore());
+  $('btn-walk').addEventListener('click', () => WALK.on ? exitExplore() : enterWalk());
+  UI.hintExplore = $('hint').innerHTML;
+  // touch buttons while walking
+  const hold = (id, key) => { const b = $(id); b.addEventListener('pointerdown', e => { e.preventDefault(); WALK.touch[key] = true; }); for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => { WALK.touch[key] = false; }); };
+  hold('pad-jump', 'jump');
+  $('pad-crouch').addEventListener('click', () => { WALK.touch.crouch = !WALK.touch.crouch; $('pad-crouch').setAttribute('aria-pressed', WALK.touch.crouch); });
+  $('pad-view').addEventListener('click', () => { WALK.dist = WALK.dist > 0 ? 0 : 2.6; });
   $('btn-index').addEventListener('click', () => toggleIndex());
   $('btn-map').addEventListener('click', () => toggleMap());
   $('btn-sound').addEventListener('click', toggleSound);
   $('btn-ui').addEventListener('click', () => toggleUI());
   $('btn-fs').addEventListener('click', toggleFullscreen);
   // keyboard
+  const WALK_KEYS = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight', 'Space', 'KeyC'];
   addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') return;
-    if (SEQ.explore && ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight'].includes(e.code)) {
+    if (WALK.on && WALK_KEYS.includes(e.code)) { WALK.keys[e.code] = true; e.preventDefault(); return; }
+    if (!SEQ.explore && e.code === 'KeyW' && !e.repeat && !e.ctrlKey && !e.metaKey) { enterWalk(); WALK.keys.KeyW = true; return; }
+    if (SEQ.explore && !WALK.on && ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight'].includes(e.code)) {
       EXP.keys[e.code] = true;
       if (e.code === 'KeyE' && !e.repeat && !EXP.keys._eDown) { EXP.keys._eDown = true; }
       if (e.code.startsWith('Arrow')) e.preventDefault();
@@ -66,7 +76,7 @@ function initUI() {
     else if (/^[0-9]$/.test(k)) { let n = k === '0' ? 10 : +k; if (e.shiftKey) n += 10; if (n <= 24) gotoShot(n - 1); }
     else if (k === 't' || k === 'T') toggleTransitions();
     else if (k === 'a' || k === 'A') $('btn-auto').click();
-    else if (k === 'e' || k === 'E') { if (!e.repeat) SEQ.explore ? exitExplore() : enterExplore(); }
+    else if (k === 'e' || k === 'E') { if (!e.repeat) WALK.on ? walkToOrbit() : SEQ.explore ? exitExplore() : enterExplore(); }
     else if (k === 'Escape') { if (SEQ.explore) exitExplore(); else if (!$('help').hidden) $('help').hidden = true; else if (!$('looks').hidden) toggleLooks(false); else if (!$('index').hidden) toggleIndex(false); }
     else if (k === 'h' || k === 'H') toggleUI();
     else if (k === 'f' || k === 'F') toggleFullscreen();
@@ -79,25 +89,32 @@ function initUI() {
     else if (k === ']') setSpeed(SEQ.speed >= 2 ? 2 : SEQ.speed * 2);
     else if (k === '?') $('help').hidden = !$('help').hidden;
   });
-  addEventListener('keyup', e => { EXP.keys[e.code] = false; if (e.code === 'KeyE') EXP.keys._eDown = false; });
+  addEventListener('keyup', e => { EXP.keys[e.code] = false; WALK.keys[e.code] = false; if (e.code === 'KeyE') EXP.keys._eDown = false; });
+  addEventListener('blur', () => { EXP.keys = {}; WALK.keys = {}; });
   $('help').addEventListener('click', () => $('help').hidden = true);
   // pointer: orbit / pan / dolly in explore mode
   const cv = $('view');
   cv.addEventListener('contextmenu', e => e.preventDefault());
-  cv.addEventListener('pointerdown', e => { if (!SEQ.explore) return; EXP.dragging = true; EXP.mode = (e.button === 2 || e.shiftKey) ? 1 : 0; EXP.lx = e.clientX; EXP.ly = e.clientY; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointerdown', e => { if (WALK.on) { walkPointerDown(e); cv.setPointerCapture(e.pointerId); return; } if (!SEQ.explore) return; EXP.dragging = true; EXP.mode = (e.button === 2 || e.shiftKey) ? 1 : 0; EXP.lx = e.clientX; EXP.ly = e.clientY; cv.setPointerCapture(e.pointerId); });
   cv.addEventListener('pointermove', e => {
+    if (WALK.on) { walkPointerMove(e); return; }
     showChrome();
     if (!SEQ.explore || !EXP.dragging) return;
     const dx = e.clientX - EXP.lx, dy = e.clientY - EXP.ly; EXP.lx = e.clientX; EXP.ly = e.clientY;
     if (EXP.mode === 0) { EXP.theta -= dx * 0.005; EXP.phi -= dy * 0.005; }
     else { const s = EXP.radius * 0.0016; const fwd = V3(-Math.sin(EXP.theta), 0, -Math.cos(EXP.theta)), right = V3(-fwd.z, 0, fwd.x); EXP.target.addScaledVector(right, -dx * s).add(V3(0, dy * s, 0)); }
   });
-  cv.addEventListener('pointerup', () => { EXP.dragging = false; });
-  cv.addEventListener('wheel', e => { if (!SEQ.explore) return; e.preventDefault(); EXP.radius = clamp(EXP.radius * Math.exp(e.deltaY * 0.0012), 0.6, 320); }, { passive: false });
+  for (const ev of ['pointerup', 'pointercancel']) cv.addEventListener(ev, e => { if (WALK.on) walkPointerUp(e); EXP.dragging = false; });
+  cv.addEventListener('wheel', e => { if (!SEQ.explore) return; e.preventDefault(); if (WALK.on) walkZoom(e.deltaY); else EXP.radius = clamp(EXP.radius * Math.exp(e.deltaY * 0.0012), 0.6, 320); }, { passive: false });
+  // walking: the pointer is locked to the view (click to lock again after Esc frees it)
+  cv.addEventListener('click', () => { if (WALK.on && !WALK.locked && !WALK.noLock) walkLock(); });
+  document.addEventListener('pointerlockchange', () => { WALK.locked = document.pointerLockElement === cv; if (WALK.on) UI.onWalk(true); });
+  document.addEventListener('pointerlockerror', () => { WALK.noLock = true; if (WALK.on) UI.onWalk(true); });
+  addEventListener('mousemove', e => { if (WALK.on && WALK.locked) walkLook(e.movementX, e.movementY); });
   // touch pinch
   const touches = new Map();
   cv.addEventListener('touchstart', e => { for (const t of e.changedTouches) touches.set(t.identifier, t); if (touches.size === 2) { const [a, b] = [...touches.values()]; EXP.pinch = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); } }, { passive: true });
-  cv.addEventListener('touchmove', e => { for (const t of e.changedTouches) touches.set(t.identifier, t); if (SEQ.explore && touches.size === 2) { const [a, b] = [...touches.values()]; const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); if (EXP.pinch) EXP.radius = clamp(EXP.radius * EXP.pinch / d, 0.6, 320); EXP.pinch = d; } }, { passive: true });
+  cv.addEventListener('touchmove', e => { for (const t of e.changedTouches) touches.set(t.identifier, t); if (SEQ.explore && !WALK.on && touches.size === 2) { const [a, b] = [...touches.values()]; const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); if (EXP.pinch) EXP.radius = clamp(EXP.radius * EXP.pinch / d, 0.6, 320); EXP.pinch = d; } }, { passive: true });
   cv.addEventListener('touchend', e => { for (const t of e.changedTouches) touches.delete(t.identifier); if (touches.size < 2) EXP.pinch = 0; }, { passive: true });
   // map clicks jump to the nearest camera marker
   $('map').addEventListener('click', e => {
@@ -107,7 +124,7 @@ function initUI() {
     MAPV.markers.forEach((m, i) => { const d = Math.hypot(m.x - mx, m.y - my); if (d < bd) { bd = d; best = i; } });
     if (best >= 0) gotoShot(best);
   });
-  addEventListener('mousemove', showChrome);
+  addEventListener('mousemove', () => { if (!WALK.locked) showChrome(); });
   addEventListener('resize', layout);
   document.addEventListener('fullscreenchange', layout);
   layout();
@@ -205,7 +222,7 @@ function showChrome() {
   const app = $('app');
   app.classList.remove('idle');
   clearTimeout(chromeTimer);
-  chromeTimer = setTimeout(() => { if (SEQ.playing && !SEQ.explore) app.classList.add('idle'); }, 3500);
+  chromeTimer = setTimeout(() => { if ((SEQ.playing && !SEQ.explore) || WALK.on) app.classList.add('idle'); }, 3500);
 }
 
 UI.onShot = (i, transitioning) => {
@@ -218,6 +235,18 @@ UI.onShot = (i, transitioning) => {
   UI.chips.forEach((c, j) => { c.classList.toggle('on', j === i); c.classList.remove('next'); });
   UI.rows.forEach((r, j) => r.classList.toggle('on', j === i));
   if (!SEQ.explore) { const h = '#cam' + s.no; if (location.hash !== h) history.replaceState(null, '', h); }
+};
+UI.onWalk = on => {
+  $('app').classList.toggle('walk', on);
+  $('btn-walk').setAttribute('aria-pressed', on);
+  $('btn-explore').setAttribute('aria-pressed', SEQ.explore && !on);
+  if (on && document.activeElement !== $('view')) $('view').focus();   // so Space jumps instead of pressing the button
+  $('pad').hidden = !(on && IS_TOUCH);
+  $('hint').innerHTML = !on ? UI.hintExplore : IS_TOUCH ? '<b>Walk</b>Left thumb moves, harder runs · right thumb looks · E or Esc to leave'
+    : WALK.locked ? '<b>Walk</b>WASD move · Shift run · Space jump · C crouch · wheel to first person · Esc frees the mouse'
+    : `<b>Walk</b>${WALK.noLock ? 'Drag' : 'Click'} to look around · WASD move · Shift run · Space jump · C crouch · Esc returns to the cameras`;
+  if (on) { $('camno').textContent = 'WALK'; $('camname').textContent = 'On foot'; $('camjp').textContent = '散歩'; $('lens').textContent = '24 mm · T8 · eye level'; $('desc').textContent = 'You are in the street now. Kerbs, posts, cars and people are all solid.'; }
+  else if (SEQ.explore) UI.onExplore(true);
 };
 UI.onExplore = (on) => {
   $('app').classList.toggle('explore', on);
@@ -314,7 +343,7 @@ function drawMap(o) {
     g.beginPath(); g.arc(x, y, (on ? 3 : 1.8) * dpr, 0, TAU); g.fill();
     if (on || MAPV.labels) { g.font = `${9 * dpr}px ${FONTS.mono}`; g.fillText(s.no, x + 4 * dpr, y - 3 * dpr); }
   });
-  if (SEQ.explore && o) { const [x, y] = mapXY(o.pos.x, o.pos.z); g.fillStyle = '#7fe0ff'; g.beginPath(); g.arc(x, y, 3 * dpr, 0, TAU); g.fill(); }
+  if (SEQ.explore && o) { const p = WALK.on ? WALK : o.pos, [x, y] = mapXY(p.x, p.z); g.fillStyle = '#7fe0ff'; g.beginPath(); g.arc(x, y, 3 * dpr, 0, TAU); g.fill(); }
 }
 const MAP_CACHE = {};
 function evalShotCached(i) {
@@ -356,7 +385,7 @@ function buildAmbience(ctx) {
   const trG = ctx.createGain(); trG.gain.value = 0; src(0.35, 3.1).connect(trF).connect(trG).connect(master);
   const osc = ctx.createOscillator(); osc.type = 'sine'; osc.frequency.value = 2600;
   const chG = ctx.createGain(); chG.gain.value = 0; osc.connect(chG).connect(master); osc.start();
-  return { ctx, master, rainG, humG, carG, carF, carP, trG, chG, osc, muff };
+  return { ctx, master, rainG, humG, carG, carF, carP, trG, chG, osc, muff, noiseBuf };
 }
 function initAudio() { Object.assign(AUDIO, buildAmbience(new (window.AudioContext || window.webkitAudioContext)())); }
 

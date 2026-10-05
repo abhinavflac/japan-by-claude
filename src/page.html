@@ -30,6 +30,7 @@ button{font:inherit;color:inherit}
 #view{display:block;width:100%;height:100%;touch-action:none;outline:none}
 #app.explore #view{cursor:grab}
 #app.explore #view:active{cursor:grabbing}
+#app.walk #view,#app.walk #view:active{cursor:crosshair}
 
 /* ---------- top bar ---------- */
 #top{position:absolute;left:0;right:0;top:0;min-height:var(--bar-top);box-sizing:border-box;
@@ -144,6 +145,14 @@ button{font:inherit;color:inherit}
 #thermhud .ret::before,#thermhud .ret::after{content:"";position:absolute;background:rgba(255,255,255,.8)}
 #thermhud .ret::before{left:0;right:0;top:50%;height:1px}
 #thermhud .ret::after{top:0;bottom:0;left:50%;width:1px}
+#pad{position:absolute;inset:0;pointer-events:none;z-index:6}
+#stick{position:absolute;width:112px;height:112px;margin:-56px 0 0 -56px;border-radius:50%;border:1px solid rgba(236,230,218,.35);background:rgba(4,5,7,.25)}
+#stick i{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(236,230,218,.5)}
+.pbtns{position:absolute;right:16px;bottom:16px;display:flex;gap:10px;pointer-events:auto}
+.overlaybars .pbtns{bottom:130px}
+.pbtn{appearance:none;width:62px;height:62px;border-radius:50%;border:1px solid rgba(236,230,218,.4);background:rgba(4,5,7,.45);color:var(--ink);
+  font:600 10px var(--f-ui);letter-spacing:.1em;text-transform:uppercase;touch-action:none;-webkit-user-select:none;user-select:none}
+.pbtn[aria-pressed="true"]{background:rgba(255,183,102,.38)}
 #dip{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .25s ease}
 #endcard{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;pointer-events:none;
   text-align:center;opacity:0;transition:opacity 1.2s ease}
@@ -196,6 +205,7 @@ button{font:inherit;color:inherit}
   .strip{grid-column:1/-1;grid-row:1;grid-template-columns:repeat(12,minmax(0,1fr))}
   .transport{grid-row:2}
   .toggles{grid-row:2;justify-self:end}
+  #app.walk .strip{display:none}
   #map{width:220px;height:88px}
 }
 @media (max-width:560px){
@@ -224,6 +234,10 @@ button{font:inherit;color:inherit}
     </div>
     <div id="osd" hidden><div class="tl">PLAY ▶</div><div class="tr">SP</div><div class="bl"><div id="osd-time">PM 7:42</div><div>OCT. 4 2026</div></div></div>
     <div id="thermhud" hidden><div class="tl">THERMAL · IRON · AUTO · 9 Hz</div><div class="ret"></div><div class="scale"><span style="top:0">36°C</span><span style="top:50%">22°C</span><span style="top:100%">8°C</span></div></div>
+    <div id="pad" hidden>
+      <div id="stick" hidden><i></i></div>
+      <div class="pbtns"><button class="pbtn" id="pad-view" aria-label="First or third person">View</button><button class="pbtn" id="pad-crouch" aria-pressed="false" aria-label="Crouch">Crouch</button><button class="pbtn" id="pad-jump" aria-label="Jump">Jump</button></div>
+    </div>
     <div id="dip"></div>
     <div id="endcard"><div class="e1">One world. One moment. 24 cameras.</div><div class="e2">ひとつの街、ひとつの瞬間、二十四台のカメラ</div></div>
   </div>
@@ -265,6 +279,7 @@ button{font:inherit;color:inherit}
     <div class="group toggles">
       <button class="btn" id="btn-trans" aria-pressed="true" title="Cinematic transitions (T)">Glide</button>
       <button class="btn opt" id="btn-auto" aria-pressed="true" title="Advance through the sequence (A)">Auto</button>
+      <button class="btn" id="btn-walk" aria-pressed="false" title="Walk the street (W)">Walk</button>
       <button class="btn" id="btn-explore" aria-pressed="false" title="Free camera (E)">Explore</button>
       <button class="btn" id="btn-index" aria-pressed="false" title="All cameras (C)">Cameras</button>
       <button class="btn opt" id="btn-map" aria-pressed="true" title="Map (M)">Map</button>
@@ -295,6 +310,7 @@ button{font:inherit;color:inherit}
         <dt>1–9, 0</dt><dd>Cameras 1 to 10 (Shift for 11 to 20)</dd>
         <dt>T</dt><dd>Switch between glides and hard cuts</dd>
         <dt>A</dt><dd>Auto-advance through the sequence</dd>
+        <dt>W</dt><dd>Walk the street: WASD or arrows, Shift runs, Space jumps, C crouches, the mouse looks, the wheel goes first person</dd>
         <dt>E</dt><dd>Free camera; pause first to walk around a frozen moment</dd>
         <dt>[ ]</dt><dd>Slower or faster playback</dd>
         <dt>N</dt><dd>Day or night: the same minute at 08:42 or 19:42</dd>
@@ -314,7 +330,7 @@ button{font:inherit;color:inherit}
         <button id="begin" disabled>Begin</button>
         <div class="iprog"><div class="bar"><i id="ibar"></i></div><div class="t" id="itext">Loading type…</div></div>
       </div>
-      <div class="ikeys">Space play · ← → cameras · E explore · V looks · H hide · F fullscreen · ? keys</div>
+      <div class="ikeys">Space play · ← → cameras · W walk · E explore · V looks · N day · ? keys</div>
     </div>
   </div>
   <div id="fatal" hidden></div>

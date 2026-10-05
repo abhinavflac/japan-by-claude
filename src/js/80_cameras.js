@@ -517,7 +517,7 @@ function updateSequencer(dtReal) {
 function evaluateCamera() {
   const T = SEQ.world;
   let o, look = { cctv: 0, glitch: 0, wipe: 0, wipeDir: 1, fade: 0, drops: 0, distort: 0, cut: false };
-  if (SEQ.explore) { o = exploreCameraPose(); }
+  if (SEQ.explore) { o = WALK.on ? walkCameraPose() : exploreCameraPose(); }
   else if (!SEQ.tr) {
     o = evalShot(SEQ.idx, SEQ.t / shotDur(SEQ.idx), T);
     o.quat = quatOf(o);
@@ -615,6 +615,7 @@ function enterExplore() {
 }
 function exitExplore(resume = true) {
   if (!SEQ.explore) return;
+  leaveWalk();
   SEQ.explore = false;
   UI.onExplore(false);
   if (resume) {

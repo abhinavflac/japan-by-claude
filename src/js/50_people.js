@@ -210,7 +210,7 @@ function initCrowd(agents) {
     set('pelvis', 0, botC); set('torso', 0, topC); set('neck', 0, L.skin); set('head', 0, L.skin); set('hair', 0, L.hair); set('hairLong', 0, L.hair);
     for (let j = 0; j < 2; j++) { set('thigh', j, L.coat ? L.bottom : L.bottom); set('shin', j, L.bottom); set('foot', j, L.shoes); set('uarm', j, topC); set('farm', j, topC); set('hand', j, L.skin); }
     set('skirt', 0, L.coat ? topC : L.bottom);
-    set('bag', 0, new THREE.Color(L.bag === 'brief' ? '#1c1814' : L.bag === 'pack' ? pick(['#2a2a2e', '#1e2a44', '#5a4632']) : pick(['#c9b28e', '#3b3b3b', '#7a4a32', '#e8e4d8'])));
+    set('bag', 0, L.bagColor || new THREE.Color(L.bag === 'brief' ? '#1c1814' : L.bag === 'pack' ? pick(['#2a2a2e', '#1e2a44', '#5a4632']) : pick(['#c9b28e', '#3b3b3b', '#7a4a32', '#e8e4d8'])));
     set('umbO', 0, L.umbColor); set('umbV', 0, new THREE.Color(1, 1, 1)); set('umbS', 0, new THREE.Color('#2a2a2a')); set('umbF', 0, L.umbClear ? new THREE.Color('#dfe6ea') : L.umbColor);
     set('item', 0, new THREE.Color(a.itemColor || '#151515')); set('cap', 0, new THREE.Color(a.capColor || '#1e2a44'));
   });
@@ -250,6 +250,7 @@ function holdUmbrellaArm(P, j) { P.arm[j] = -0.62; P.armOut[j] = j === 0 ? -0.12
 function phoneArm(P, j) { P.arm[j] = -0.38; P.armOut[j] = j === 0 ? -0.18 : 0.18; P.elbow[j] = -1.62; }
 
 function poseFor(a, T) {
+  if (a.kind === 'player') return playerPose(a, T);
   const P = POSE0(), L = a.look, ph = a.phase || 0;
   const act = a.state.act;
   if (a.kind === 'walker') {

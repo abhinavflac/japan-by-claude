@@ -37,6 +37,7 @@ button{font:inherit;color:inherit}
 #view{display:block;width:100%;height:100%;touch-action:none;outline:none}
 #app.explore #view{cursor:grab}
 #app.explore #view:active{cursor:grabbing}
+#app.walk #view,#app.walk #view:active{cursor:crosshair}
 
 /* ---------- top bar ---------- */
 #top{position:absolute;left:0;right:0;top:0;min-height:var(--bar-top);box-sizing:border-box;
@@ -151,6 +152,14 @@ button{font:inherit;color:inherit}
 #thermhud .ret::before,#thermhud .ret::after{content:"";position:absolute;background:rgba(255,255,255,.8)}
 #thermhud .ret::before{left:0;right:0;top:50%;height:1px}
 #thermhud .ret::after{top:0;bottom:0;left:50%;width:1px}
+#pad{position:absolute;inset:0;pointer-events:none;z-index:6}
+#stick{position:absolute;width:112px;height:112px;margin:-56px 0 0 -56px;border-radius:50%;border:1px solid rgba(236,230,218,.35);background:rgba(4,5,7,.25)}
+#stick i{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(236,230,218,.5)}
+.pbtns{position:absolute;right:16px;bottom:16px;display:flex;gap:10px;pointer-events:auto}
+.overlaybars .pbtns{bottom:130px}
+.pbtn{appearance:none;width:62px;height:62px;border-radius:50%;border:1px solid rgba(236,230,218,.4);background:rgba(4,5,7,.45);color:var(--ink);
+  font:600 10px var(--f-ui);letter-spacing:.1em;text-transform:uppercase;touch-action:none;-webkit-user-select:none;user-select:none}
+.pbtn[aria-pressed="true"]{background:rgba(255,183,102,.38)}
 #dip{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .25s ease}
 #endcard{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;pointer-events:none;
   text-align:center;opacity:0;transition:opacity 1.2s ease}
@@ -203,6 +212,7 @@ button{font:inherit;color:inherit}
   .strip{grid-column:1/-1;grid-row:1;grid-template-columns:repeat(12,minmax(0,1fr))}
   .transport{grid-row:2}
   .toggles{grid-row:2;justify-self:end}
+  #app.walk .strip{display:none}
   #map{width:220px;height:88px}
 }
 @media (max-width:560px){
@@ -231,6 +241,10 @@ button{font:inherit;color:inherit}
     </div>
     <div id="osd" hidden><div class="tl">PLAY ▶</div><div class="tr">SP</div><div class="bl"><div id="osd-time">PM 7:42</div><div>OCT. 4 2026</div></div></div>
     <div id="thermhud" hidden><div class="tl">THERMAL · IRON · AUTO · 9 Hz</div><div class="ret"></div><div class="scale"><span style="top:0">36°C</span><span style="top:50%">22°C</span><span style="top:100%">8°C</span></div></div>
+    <div id="pad" hidden>
+      <div id="stick" hidden><i></i></div>
+      <div class="pbtns"><button class="pbtn" id="pad-view" aria-label="First or third person">View</button><button class="pbtn" id="pad-crouch" aria-pressed="false" aria-label="Crouch">Crouch</button><button class="pbtn" id="pad-jump" aria-label="Jump">Jump</button></div>
+    </div>
     <div id="dip"></div>
     <div id="endcard"><div class="e1">One world. One moment. 24 cameras.</div><div class="e2">ひとつの街、ひとつの瞬間、二十四台のカメラ</div></div>
   </div>
@@ -272,6 +286,7 @@ button{font:inherit;color:inherit}
     <div class="group toggles">
       <button class="btn" id="btn-trans" aria-pressed="true" title="Cinematic transitions (T)">Glide</button>
       <button class="btn opt" id="btn-auto" aria-pressed="true" title="Advance through the sequence (A)">Auto</button>
+      <button class="btn" id="btn-walk" aria-pressed="false" title="Walk the street (W)">Walk</button>
       <button class="btn" id="btn-explore" aria-pressed="false" title="Free camera (E)">Explore</button>
       <button class="btn" id="btn-index" aria-pressed="false" title="All cameras (C)">Cameras</button>
       <button class="btn opt" id="btn-map" aria-pressed="true" title="Map (M)">Map</button>
@@ -302,6 +317,7 @@ button{font:inherit;color:inherit}
         <dt>1–9, 0</dt><dd>Cameras 1 to 10 (Shift for 11 to 20)</dd>
         <dt>T</dt><dd>Switch between glides and hard cuts</dd>
         <dt>A</dt><dd>Auto-advance through the sequence</dd>
+        <dt>W</dt><dd>Walk the street: WASD or arrows, Shift runs, Space jumps, C crouches, the mouse looks, the wheel goes first person</dd>
         <dt>E</dt><dd>Free camera; pause first to walk around a frozen moment</dd>
         <dt>[ ]</dt><dd>Slower or faster playback</dd>
         <dt>N</dt><dd>Day or night: the same minute at 08:42 or 19:42</dd>
@@ -321,7 +337,7 @@ button{font:inherit;color:inherit}
         <button id="begin" disabled>Begin</button>
         <div class="iprog"><div class="bar"><i id="ibar"></i></div><div class="t" id="itext">Loading type…</div></div>
       </div>
-      <div class="ikeys">Space play · ← → cameras · E explore · V looks · H hide · F fullscreen · ? keys</div>
+      <div class="ikeys">Space play · ← → cameras · W walk · E explore · V looks · N day · ? keys</div>
     </div>
   </div>
   <div id="fatal" hidden></div>
@@ -4941,7 +4957,7 @@ function initCrowd(agents) {
     set('pelvis', 0, botC); set('torso', 0, topC); set('neck', 0, L.skin); set('head', 0, L.skin); set('hair', 0, L.hair); set('hairLong', 0, L.hair);
     for (let j = 0; j < 2; j++) { set('thigh', j, L.coat ? L.bottom : L.bottom); set('shin', j, L.bottom); set('foot', j, L.shoes); set('uarm', j, topC); set('farm', j, topC); set('hand', j, L.skin); }
     set('skirt', 0, L.coat ? topC : L.bottom);
-    set('bag', 0, new THREE.Color(L.bag === 'brief' ? '#1c1814' : L.bag === 'pack' ? pick(['#2a2a2e', '#1e2a44', '#5a4632']) : pick(['#c9b28e', '#3b3b3b', '#7a4a32', '#e8e4d8'])));
+    set('bag', 0, L.bagColor || new THREE.Color(L.bag === 'brief' ? '#1c1814' : L.bag === 'pack' ? pick(['#2a2a2e', '#1e2a44', '#5a4632']) : pick(['#c9b28e', '#3b3b3b', '#7a4a32', '#e8e4d8'])));
     set('umbO', 0, L.umbColor); set('umbV', 0, new THREE.Color(1, 1, 1)); set('umbS', 0, new THREE.Color('#2a2a2a')); set('umbF', 0, L.umbClear ? new THREE.Color('#dfe6ea') : L.umbColor);
     set('item', 0, new THREE.Color(a.itemColor || '#151515')); set('cap', 0, new THREE.Color(a.capColor || '#1e2a44'));
   });
@@ -4981,6 +4997,7 @@ function holdUmbrellaArm(P, j) { P.arm[j] = -0.62; P.armOut[j] = j === 0 ? -0.12
 function phoneArm(P, j) { P.arm[j] = -0.38; P.armOut[j] = j === 0 ? -0.18 : 0.18; P.elbow[j] = -1.62; }
 
 function poseFor(a, T) {
+  if (a.kind === 'player') return playerPose(a, T);
   const P = POSE0(), L = a.look, ph = a.phase || 0;
   const act = a.state.act;
   if (a.kind === 'walker') {
@@ -7869,7 +7886,7 @@ function updateSequencer(dtReal) {
 function evaluateCamera() {
   const T = SEQ.world;
   let o, look = { cctv: 0, glitch: 0, wipe: 0, wipeDir: 1, fade: 0, drops: 0, distort: 0, cut: false };
-  if (SEQ.explore) { o = exploreCameraPose(); }
+  if (SEQ.explore) { o = WALK.on ? walkCameraPose() : exploreCameraPose(); }
   else if (!SEQ.tr) {
     o = evalShot(SEQ.idx, SEQ.t / shotDur(SEQ.idx), T);
     o.quat = quatOf(o);
@@ -7967,6 +7984,7 @@ function enterExplore() {
 }
 function exitExplore(resume = true) {
   if (!SEQ.explore) return;
+  leaveWalk();
   SEQ.explore = false;
   UI.onExplore(false);
   if (resume) {
@@ -7994,6 +8012,284 @@ function exploreCameraPose() {
   const o = { pos, target: EXP.target.clone(), mm: EXP.mm || 28, T: 4, focus: r, exposure: 1, near: 0.08, rain: 1, reflPlane: 0, roll: 0 };
   o.quat = quatOf(o);
   return o;
+}
+
+// ---- 85_walk.js ----
+/* ============================================================
+   Walk: a person you steer through the street. Gravity and kerbs,
+   walls, posts and back blocks, parked and moving traffic, the
+   crowd and him; mouse-look under pointer lock (or drag), a third
+   person view that the wheel pulls in to first person, and a
+   thumbstick with buttons on touch screens.
+   ============================================================ */
+
+const WALK = {
+  on: false, keys: {}, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, yaw: 0, body: 0, pitch: -0.1, dist: 2.6, distS: 2.6,
+  grounded: true, crouch: 0, air: 0, phase: 0, jumpHeld: false, locked: false, solids: null, cars: [], agent: null,
+  touch: { mx: 0, mz: 0, run: false, jump: false, crouch: false, stick: -1, look: -1, ox: 0, oy: 0, lx: 0, ly: 0 },
+};
+const WALK_R = 0.28, WALK_H = 1.75, WALK_H_LOW = 1.15, WALK_STEP = 0.36, WALK_G = 17, WALK_JUMP = 5.3;
+const WALK_V = { walk: 1.7, run: 4.6, crouch: 0.9 };
+
+// The person you play: one more member of the crowd rig, in a red jacket with a cap and a backpack.
+// Its look is fixed rather than drawn from the seeded generator, so the rest of the world stays the same.
+function playerAgent() {
+  const c = h => new THREE.Color(h);
+  const look = {
+    female: false, elderly: false, child: false, s: 0.97, skin: c('#e2bf9c'), hair: c('#1b1512'), top: c('#b8352a'), bottom: c('#23272e'), shoes: c('#e8e8e4'),
+    longHair: false, coat: false, skirt: false, bag: 'pack', bagColor: c('#2a2a2e'), umbrella: 'none', umbClear: false, umbColor: c('#16171a'), phone: false, cap: true, towel: false, gait: 1, armSwing: 1,
+  };
+  return (WALK.agent = { kind: 'player', look, phase: 0, umbHand: 1, capColor: '#ece9e1', state: { hidden: true, x: 0, y: 0, z: 0, yaw: 0 } });
+}
+
+// Ground under a point: pavements and roads on the street, one wet plane in the back lanes.
+function walkGround(x, z) {
+  const ax = Math.abs(x);
+  if (z > 110 || z < -170 || (ax > 23.5 && (z < CROSS.s0 || z > CROSS.s1))) return -0.06;
+  if (x < -FRONT_X && z > 50.3 && z < 55.7) return 0;
+  if (x > FRONT_X && x < 21 && z > -29 && z < -19) return 0.06;
+  return walkY(x, z);
+}
+
+// Everything solid that stands still: the camera colliders and the back blocks as boxes; vending machines,
+// parked cars, bicycles and scooters as boxes turned to their yaw (x across, z along).
+function walkSolids() {
+  const boxes = COLLIDERS.slice();
+  for (const b of MAP_BLOCKS) if (b.back && b.h > 0) boxes.push(new THREE.Box3(V3(b.x0, -1, b.z0), V3(b.x1, b.h, b.z1)));
+  const obb = [];
+  const add = (x, z, yaw, L, W, H) => obb.push({ x, z, c: Math.cos(yaw), s: Math.sin(yaw), hx: W / 2, hz: L / 2, y0: -1, y1: H });
+  for (const v of VENDING) add(v.x, v.z, v.yaw, 0.72, 1.0, 2.0);
+  for (const p of PARKED) { const d = VTYPES[p.type === 'kei' ? 'kei' : p.type === 'van' ? 'van' : 'sedan']; add(p.x, p.z, p.yaw, d.L, d.W, d.H); }
+  for (const b of BIKES) add(b.p.x, b.p.z, b.yaw, 1.7, 0.5, 1.1);
+  for (const s of SCOOTERS) add(s.p.x, s.p.z, s.yaw, 1.7, 0.6, 1.1);
+  return { boxes, obb };
+}
+
+// Push the player's circle out of a rectangle centred dx, dz away, turned by (c, s) = (cos, sin) of its yaw.
+// Traffic can't stop for you (it is worked out ahead of time), so a moving car only brushes you aside.
+function pushRect(dx, dz, c, s, hx, hz, out, aside) {
+  const r = WALK_R, lx = dx * c - dz * s, lz = dx * s + dz * c;
+  const qx = clamp(lx, -hx, hx), qz = clamp(lz, -hz, hz);
+  let px = 0, pz = 0;
+  if (aside) {
+    if (Math.abs(lx) >= hx + r || Math.abs(lz) >= hz + r) return;
+    px = (Math.sign(lx) || 1) * (hx + r - Math.abs(lx));
+  } else if (qx !== lx || qz !== lz) {
+    const nx = lx - qx, nz = lz - qz, d = Math.hypot(nx, nz);
+    if (d >= r) return;
+    px = nx / d * (r - d); pz = nz / d * (r - d);
+  } else if (hx - Math.abs(lx) < hz - Math.abs(lz)) px = (Math.sign(lx) || 1) * (hx - Math.abs(lx) + r);
+  else pz = (Math.sign(lz) || 1) * (hz - Math.abs(lz) + r);
+  const wx = px * c + pz * s, wz = -px * s + pz * c;
+  WALK.x += wx; WALK.z += wz; out.x += wx; out.z += wz;
+}
+
+function walkCollide() {
+  const W = WALK, r = WALK_R, foot = W.y + WALK_STEP, top = W.y + lerp(WALK_H, WALK_H_LOW, W.crouch), push = { x: 0, z: 0 };
+  for (let it = 0; it < 3; it++) {
+    for (const b of W.solids.boxes) {
+      if (b.max.y <= foot || b.min.y >= top || W.x < b.min.x - r || W.x > b.max.x + r || W.z < b.min.z - r || W.z > b.max.z + r) continue;
+      pushRect(W.x - (b.min.x + b.max.x) / 2, W.z - (b.min.z + b.max.z) / 2, 1, 0, (b.max.x - b.min.x) / 2, (b.max.z - b.min.z) / 2, push);
+    }
+    for (const list of [W.solids.obb, W.cars]) for (const o of list) {
+      if (o.y1 <= foot || o.y0 >= top || Math.abs(W.x - o.x) > o.hx + o.hz + r || Math.abs(W.z - o.z) > o.hx + o.hz + r) continue;
+      pushRect(W.x - o.x, W.z - o.z, o.c, o.s, o.hx, o.hz, push, list === W.cars);
+    }
+    const circle = (x, z, m) => { const dx = W.x - x, dz = W.z - z, d = Math.hypot(dx, dz); if (d < m && d > 1e-4) { W.x += dx / d * (m - d); W.z += dz / d * (m - d); push.x += dx / d * (m - d); push.z += dz / d * (m - d); } };
+    for (const a of CROWD.agents) { const st = a.state; if (a !== W.agent && st && !st.hidden && Math.abs(st.y - W.y) < 1.2) circle(st.x, st.z, r + 0.24); }
+    circle(HERO.x, HERO.z, r + 0.3);
+  }
+  // lose the part of the velocity that ran into something
+  const pl = Math.hypot(push.x, push.z);
+  if (pl > 1e-5) { const nx = push.x / pl, nz = push.z / pl, vn = W.vx * nx + W.vz * nz; if (vn < 0) { W.vx -= nx * vn; W.vz -= nz * vn; } }
+}
+
+// Ground plus anything low enough to step up on.
+function walkFloor(x, z, y) {
+  let g = walkGround(x, z);
+  for (const b of WALK.solids.boxes) if (b.max.y > g && b.max.y <= y + WALK_STEP && x > b.min.x && x < b.max.x && z > b.min.z && z < b.max.z) g = b.max.y;
+  return g;
+}
+
+function updateWalk(dt, T) {
+  const W = WALK, k = W.keys, t = W.touch;
+  dt = Math.min(dt, 1 / 20);
+  // traffic near the player, as turned boxes
+  W.cars.length = 0;
+  for (const l of TRAFFIC.lives) {
+    const s = vehicleState(l.id, T);
+    if (!s.visible || Math.abs(s.x - W.x) > 14 || Math.abs(s.z - W.z) > 14) continue;
+    const D = VDIM(l.type);
+    W.cars.push({ x: s.x, z: s.z, c: Math.cos(s.yaw), s: Math.sin(s.yaw), hx: D.W / 2, hz: D.L / 2, y0: -1, y1: D.H });
+  }
+  let ix = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0) + t.mx;
+  let iz = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0) + t.mz;
+  const il = Math.hypot(ix, iz); if (il > 1) { ix /= il; iz /= il; }
+  const low = !!(k.KeyC || t.crouch);
+  W.crouch = clamp(W.crouch + (low ? 1 : -1) * dt * 6, 0, 1);
+  const run = !!(k.ShiftLeft || k.ShiftRight || t.run) && !low;
+  const vmax = low ? WALK_V.crouch : run ? WALK_V.run : WALK_V.walk;
+  // input is relative to where you look: forward along the view, right across it
+  const fx = Math.sin(W.yaw), fz = Math.cos(W.yaw), rx = -fz, rz = fx;
+  const tx = (fx * iz + rx * ix) * vmax, tz = (fz * iz + rz * ix) * vmax;
+  const a = 1 - Math.exp(-(W.grounded ? 12 : 2.5) * dt);
+  W.vx += (tx - W.vx) * a; W.vz += (tz - W.vz) * a;
+  const jump = !!(k.Space || t.jump);
+  if (jump && W.grounded && !W.jumpHeld && W.crouch < 0.5) { W.vy = WALK_JUMP; W.grounded = false; }
+  W.jumpHeld = jump;
+  W.vy -= WALK_G * dt;
+  const n = Math.max(1, Math.ceil(Math.hypot(W.vx, W.vz) * dt / 0.1));
+  for (let i = 0; i < n; i++) {
+    W.x = clamp(W.x + W.vx * dt / n, -250, 250); W.z = clamp(W.z + W.vz * dt / n, -330, 260); W.y += W.vy * dt / n;
+    walkCollide();
+    const g = walkFloor(W.x, W.z, W.y);
+    if (W.y <= g || (W.grounded && W.vy <= 0 && W.y - g < WALK_STEP)) { W.y = g; W.vy = 0; W.grounded = true; }   // land, step up, or keep feet down a kerb
+    else W.grounded = false;
+  }
+  const sp = Math.hypot(W.vx, W.vz);
+  W.air = clamp(W.air + (W.grounded ? -1 : 1) * dt * 8, 0, 1);
+  const ph0 = W.phase, wasAir = W.air > 0.5;
+  W.phase += sp * dt / (lerp(1.42, 2.5, clamp((sp - WALK_V.walk) / (WALK_V.run - WALK_V.walk), 0, 1)) * WALK.agent.look.s) * TAU;
+  if (W.grounded && (Math.floor(W.phase / Math.PI) !== Math.floor(ph0 / Math.PI) || wasAir)) walkStep(wasAir ? 1.6 : clamp(sp / WALK_V.walk, 0.4, 1.4) * (1 - 0.5 * W.crouch));
+  // the body turns toward where it moves (in first person it faces the view)
+  const want = W.distS < 0.6 ? W.yaw : sp > 0.3 ? Math.atan2(W.vx, W.vz) : W.body;
+  W.body += wrapAngle(want - W.body) * (1 - Math.exp(-10 * dt));
+  const st = W.agent.state;
+  st.hidden = false; st.x = W.x; st.y = W.y; st.z = W.z; st.yaw = W.body; st.hideHead = W.distS < 0.6;
+}
+
+// A footfall on wet paving, when the sound is on: a short burst of the ambience's noise.
+function walkStep(k) {
+  if (!AUDIO.ctx || !AUDIO.on || !SEQ.playing) return;
+  const c = AUDIO.ctx, t = c.currentTime, src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  src.buffer = AUDIO.noiseBuf; f.type = 'bandpass'; f.frequency.value = 900 + 500 * hash1(WALK.phase); f.Q.value = 0.9;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.32 * k, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+  src.connect(f).connect(g).connect(AUDIO.master);
+  src.start(t, hash1(WALK.phase * 3.1) * 3); src.stop(t + 0.18);
+}
+
+// Walk, run, crouch and jump on the crowd's own rig.
+function playerPose(a, T) {
+  const W = WALK, P = POSE0(), L = a.look;
+  const sp = Math.hypot(W.vx, W.vz), runK = clamp((sp - WALK_V.walk) / (WALK_V.run - WALK_V.walk), 0, 1), c = W.crouch, air = W.air;
+  if (sp > 0.08) {
+    walkPose(P, W.phase, L, clamp(sp / WALK_V.walk, 0.3, 1) * (1 + 0.75 * runK));
+    P.torsoPitch += 0.14 * runK;
+    for (let j = 0; j < 2; j++) P.elbow[j] -= 0.9 * runK;
+  } else idleSway(P, T, 0);
+  for (let j = 0; j < 2; j++) {
+    P.thigh[j] = lerp(P.thigh[j] * (1 - 0.5 * c) - 1.05 * c, j ? -0.35 : -0.9, air);
+    P.knee[j] = lerp(P.knee[j] + 1.65 * c, j ? 0.8 : 1.3, air);
+    P.foot[j] = lerp(P.foot[j] - 0.55 * c, 0.2, air);
+    P.arm[j] = lerp(P.arm[j] - 0.35 * c, -0.85, air); P.armOut[j] = lerp(P.armOut[j], j ? 0.4 : -0.4, air);
+  }
+  P.y -= 0.36 * c;
+  P.torsoPitch += 0.5 * c + 0.12 * air;
+  P.headPitch = -W.pitch * 0.5 - 0.2 * c;
+  return P;
+}
+
+// The view: over the shoulder, pulled in front of anything solid behind it, or from the eyes.
+const _wRay = new THREE.Ray(), _wHit = new THREE.Vector3();
+function walkCameraPose() {
+  const W = WALK;
+  W.distS += (W.dist - W.distS) * 0.2;
+  const fpv = W.distS < 0.6;
+  const sp = Math.hypot(W.vx, W.vz);
+  const eye = W.y + lerp(1.6, 1.08, W.crouch) * WALK.agent.look.s;
+  const fwd = V3(Math.sin(W.yaw) * Math.cos(W.pitch), Math.sin(W.pitch), Math.cos(W.yaw) * Math.cos(W.pitch));
+  let pos;
+  if (fpv) {
+    const bob = W.grounded ? Math.abs(Math.sin(W.phase)) * 0.035 * clamp(sp / WALK_V.walk, 0, 1.6) : 0;
+    pos = V3(W.x + Math.sin(W.yaw) * 0.1, eye + bob, W.z + Math.cos(W.yaw) * 0.1);
+  } else {
+    const right = V3(-Math.cos(W.yaw), 0, Math.sin(W.yaw));
+    const pivot = V3(W.x, eye - 0.08, W.z).addScaledVector(right, 0.34 * Math.min(1, W.distS / 2));
+    let d = W.distS;
+    _wRay.set(pivot, fwd.clone().negate());
+    for (const b of W.solids.boxes) if (b.distanceToPoint(pivot) < d && _wRay.intersectBox(b, _wHit)) d = Math.min(d, _wHit.distanceTo(pivot) - 0.22);
+    pos = pivot.addScaledVector(fwd, -Math.max(0.3, d));
+    pos.y = Math.max(pos.y, walkGround(pos.x, pos.z) + 0.15);
+  }
+  const o = { pos, target: pos.clone().addScaledVector(fwd, 10), mm: fpv ? 20 : 24, T: 8, focus: fpv ? 8 : W.distS + 1, exposure: 1, near: 0.05, rain: 1, reflPlane: 0, roll: 0 };
+  o.quat = quatOf(o);
+  return o;
+}
+
+/* ---------- entering and leaving ---------- */
+function enterWalk() {
+  if (WALK.on) return;
+  const W = WALK, from = currentPose || evalShot(SEQ.idx, 0, SEQ.world);
+  let x = SEQ.explore ? EXP.target.x : from.pos.x, z = SEQ.explore ? EXP.target.z : from.pos.z;
+  if (!SEQ.explore) enterExplore();
+  W.solids = W.solids || walkSolids();
+  // start on a pavement: off the road, off a roof or out of a wall
+  const inAlley = x > FRONT_X && x < ALLEY.x1 && z > ALLEY.z0 && z < ALLEY.z1;
+  if ((Math.abs(x) > FRONT_X - 0.4 && !inAlley) || Math.abs(x) < ROAD_HW + 0.4) x = (Math.sign(x) || -1) * 4.6;
+  z = clamp(z, -160, 100);
+  const f = V3(0, 0, -1).applyQuaternion(from.quat || quatOf(from));
+  Object.assign(W, { x, z, y: walkGround(x, z), vx: 0, vy: 0, vz: 0, yaw: Math.atan2(f.x, f.z), pitch: -0.1, grounded: true, crouch: 0, air: 0, keys: {}, cars: [] });
+  W.body = W.yaw;
+  for (let i = 0; i < 4; i++) walkCollide();
+  W.on = true;
+  UI.onWalk(true);
+  walkLock();
+}
+// Leave the person where they stand; the caller decides where the camera goes next.
+function leaveWalk() {
+  if (!WALK.on) return;
+  WALK.on = false; WALK.keys = {};
+  Object.assign(WALK.touch, { mx: 0, mz: 0, run: false, jump: false, crouch: false, stick: -1, look: -1 });
+  WALK.agent.state.hidden = true;
+  if (document.pointerLockElement) document.exitPointerLock();
+  UI.onWalk(false);
+}
+// From walking to the free orbit camera, circling the spot where the person stood.
+function walkToOrbit() {
+  const W = WALK;
+  leaveWalk();
+  EXP.target.set(W.x, W.y + 1.2, W.z);
+  EXP.radius = 4; EXP.theta = W.yaw + Math.PI; EXP.phi = 1.25;
+}
+
+/* ---------- input: pointer lock or drag to look, the wheel to pull in, a thumbstick on touch ---------- */
+function walkLook(dx, dy, k = 0.0022) {
+  WALK.yaw -= dx * k;
+  WALK.pitch = clamp(WALK.pitch - dy * k, -1.2, 1.15);
+}
+function walkLock() {
+  if (IS_TOUCH || TEST || WALK.noLock) return;
+  const cv = $('view');
+  try { const p = cv.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+}
+function walkZoom(dy) {
+  WALK.dist = clamp(WALK.dist * Math.exp(dy * 0.0015) + (dy > 0 && WALK.dist < 0.6 ? 0.8 : 0), 0, 6);
+  if (WALK.dist < 0.75) WALK.dist = 0;
+}
+function walkPointerDown(e) {
+  const t = WALK.touch, r = e.currentTarget.getBoundingClientRect();
+  if (e.pointerType !== 'touch') { if (!WALK.locked) { WALK.drag = true; t.lx = e.clientX; t.ly = e.clientY; } return; }
+  if (e.clientX - r.left < r.width * 0.45 && t.stick < 0) {
+    t.stick = e.pointerId; t.ox = e.clientX; t.oy = e.clientY;
+    const s = $('stick'); s.hidden = false; s.style.left = (e.clientX - r.left) + 'px'; s.style.top = (e.clientY - r.top) + 'px'; s.firstElementChild.style.transform = '';
+  } else if (t.look < 0) { t.look = e.pointerId; t.lx = e.clientX; t.ly = e.clientY; }
+}
+function walkPointerMove(e) {
+  const t = WALK.touch;
+  if (e.pointerId === t.stick) {
+    const R = 56, dx = e.clientX - t.ox, dy = e.clientY - t.oy, l = Math.hypot(dx, dy), m = Math.min(l, R) / (l || 1);
+    t.mx = dx * m / R; t.mz = -dy * m / R; t.run = l > R * 1.25;
+    $('stick').firstElementChild.style.transform = `translate(${dx * m}px, ${dy * m}px)`;
+  } else if (e.pointerId === t.look || (e.pointerType !== 'touch' && WALK.drag)) {
+    walkLook(e.clientX - t.lx, e.clientY - t.ly, e.pointerType === 'touch' ? 0.006 : 0.004);
+    t.lx = e.clientX; t.ly = e.clientY;
+  }
+}
+function walkPointerUp(e) {
+  const t = WALK.touch;
+  if (e.pointerId === t.stick) { t.stick = -1; t.mx = t.mz = 0; t.run = false; $('stick').hidden = true; }
+  if (e.pointerId === t.look) t.look = -1;
+  WALK.drag = false;
 }
 
 // ---- 90_ui.js ----
@@ -8043,16 +8339,26 @@ function initUI() {
   for (const id of ['spd-25', 'spd-50', 'spd-100', 'spd-200']) $(id).addEventListener('click', e => setSpeed(+e.currentTarget.dataset.s));
   $('btn-trans').addEventListener('click', toggleTransitions);
   $('btn-auto').addEventListener('click', () => { SEQ.auto = !SEQ.auto; $('btn-auto').setAttribute('aria-pressed', SEQ.auto); toast(SEQ.auto ? 'Auto-advance on' : 'Holding this camera'); });
-  $('btn-explore').addEventListener('click', () => SEQ.explore ? exitExplore() : enterExplore());
+  $('btn-explore').addEventListener('click', () => WALK.on ? walkToOrbit() : SEQ.explore ? exitExplore() : enterExplore());
+  $('btn-walk').addEventListener('click', () => WALK.on ? exitExplore() : enterWalk());
+  UI.hintExplore = $('hint').innerHTML;
+  // touch buttons while walking
+  const hold = (id, key) => { const b = $(id); b.addEventListener('pointerdown', e => { e.preventDefault(); WALK.touch[key] = true; }); for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => { WALK.touch[key] = false; }); };
+  hold('pad-jump', 'jump');
+  $('pad-crouch').addEventListener('click', () => { WALK.touch.crouch = !WALK.touch.crouch; $('pad-crouch').setAttribute('aria-pressed', WALK.touch.crouch); });
+  $('pad-view').addEventListener('click', () => { WALK.dist = WALK.dist > 0 ? 0 : 2.6; });
   $('btn-index').addEventListener('click', () => toggleIndex());
   $('btn-map').addEventListener('click', () => toggleMap());
   $('btn-sound').addEventListener('click', toggleSound);
   $('btn-ui').addEventListener('click', () => toggleUI());
   $('btn-fs').addEventListener('click', toggleFullscreen);
   // keyboard
+  const WALK_KEYS = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight', 'Space', 'KeyC'];
   addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') return;
-    if (SEQ.explore && ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight'].includes(e.code)) {
+    if (WALK.on && WALK_KEYS.includes(e.code)) { WALK.keys[e.code] = true; e.preventDefault(); return; }
+    if (!SEQ.explore && e.code === 'KeyW' && !e.repeat && !e.ctrlKey && !e.metaKey) { enterWalk(); WALK.keys.KeyW = true; return; }
+    if (SEQ.explore && !WALK.on && ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight'].includes(e.code)) {
       EXP.keys[e.code] = true;
       if (e.code === 'KeyE' && !e.repeat && !EXP.keys._eDown) { EXP.keys._eDown = true; }
       if (e.code.startsWith('Arrow')) e.preventDefault();
@@ -8065,7 +8371,7 @@ function initUI() {
     else if (/^[0-9]$/.test(k)) { let n = k === '0' ? 10 : +k; if (e.shiftKey) n += 10; if (n <= 24) gotoShot(n - 1); }
     else if (k === 't' || k === 'T') toggleTransitions();
     else if (k === 'a' || k === 'A') $('btn-auto').click();
-    else if (k === 'e' || k === 'E') { if (!e.repeat) SEQ.explore ? exitExplore() : enterExplore(); }
+    else if (k === 'e' || k === 'E') { if (!e.repeat) WALK.on ? walkToOrbit() : SEQ.explore ? exitExplore() : enterExplore(); }
     else if (k === 'Escape') { if (SEQ.explore) exitExplore(); else if (!$('help').hidden) $('help').hidden = true; else if (!$('looks').hidden) toggleLooks(false); else if (!$('index').hidden) toggleIndex(false); }
     else if (k === 'h' || k === 'H') toggleUI();
     else if (k === 'f' || k === 'F') toggleFullscreen();
@@ -8078,25 +8384,32 @@ function initUI() {
     else if (k === ']') setSpeed(SEQ.speed >= 2 ? 2 : SEQ.speed * 2);
     else if (k === '?') $('help').hidden = !$('help').hidden;
   });
-  addEventListener('keyup', e => { EXP.keys[e.code] = false; if (e.code === 'KeyE') EXP.keys._eDown = false; });
+  addEventListener('keyup', e => { EXP.keys[e.code] = false; WALK.keys[e.code] = false; if (e.code === 'KeyE') EXP.keys._eDown = false; });
+  addEventListener('blur', () => { EXP.keys = {}; WALK.keys = {}; });
   $('help').addEventListener('click', () => $('help').hidden = true);
   // pointer: orbit / pan / dolly in explore mode
   const cv = $('view');
   cv.addEventListener('contextmenu', e => e.preventDefault());
-  cv.addEventListener('pointerdown', e => { if (!SEQ.explore) return; EXP.dragging = true; EXP.mode = (e.button === 2 || e.shiftKey) ? 1 : 0; EXP.lx = e.clientX; EXP.ly = e.clientY; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointerdown', e => { if (WALK.on) { walkPointerDown(e); cv.setPointerCapture(e.pointerId); return; } if (!SEQ.explore) return; EXP.dragging = true; EXP.mode = (e.button === 2 || e.shiftKey) ? 1 : 0; EXP.lx = e.clientX; EXP.ly = e.clientY; cv.setPointerCapture(e.pointerId); });
   cv.addEventListener('pointermove', e => {
+    if (WALK.on) { walkPointerMove(e); return; }
     showChrome();
     if (!SEQ.explore || !EXP.dragging) return;
     const dx = e.clientX - EXP.lx, dy = e.clientY - EXP.ly; EXP.lx = e.clientX; EXP.ly = e.clientY;
     if (EXP.mode === 0) { EXP.theta -= dx * 0.005; EXP.phi -= dy * 0.005; }
     else { const s = EXP.radius * 0.0016; const fwd = V3(-Math.sin(EXP.theta), 0, -Math.cos(EXP.theta)), right = V3(-fwd.z, 0, fwd.x); EXP.target.addScaledVector(right, -dx * s).add(V3(0, dy * s, 0)); }
   });
-  cv.addEventListener('pointerup', () => { EXP.dragging = false; });
-  cv.addEventListener('wheel', e => { if (!SEQ.explore) return; e.preventDefault(); EXP.radius = clamp(EXP.radius * Math.exp(e.deltaY * 0.0012), 0.6, 320); }, { passive: false });
+  for (const ev of ['pointerup', 'pointercancel']) cv.addEventListener(ev, e => { if (WALK.on) walkPointerUp(e); EXP.dragging = false; });
+  cv.addEventListener('wheel', e => { if (!SEQ.explore) return; e.preventDefault(); if (WALK.on) walkZoom(e.deltaY); else EXP.radius = clamp(EXP.radius * Math.exp(e.deltaY * 0.0012), 0.6, 320); }, { passive: false });
+  // walking: the pointer is locked to the view (click to lock again after Esc frees it)
+  cv.addEventListener('click', () => { if (WALK.on && !WALK.locked && !WALK.noLock) walkLock(); });
+  document.addEventListener('pointerlockchange', () => { WALK.locked = document.pointerLockElement === cv; if (WALK.on) UI.onWalk(true); });
+  document.addEventListener('pointerlockerror', () => { WALK.noLock = true; if (WALK.on) UI.onWalk(true); });
+  addEventListener('mousemove', e => { if (WALK.on && WALK.locked) walkLook(e.movementX, e.movementY); });
   // touch pinch
   const touches = new Map();
   cv.addEventListener('touchstart', e => { for (const t of e.changedTouches) touches.set(t.identifier, t); if (touches.size === 2) { const [a, b] = [...touches.values()]; EXP.pinch = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); } }, { passive: true });
-  cv.addEventListener('touchmove', e => { for (const t of e.changedTouches) touches.set(t.identifier, t); if (SEQ.explore && touches.size === 2) { const [a, b] = [...touches.values()]; const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); if (EXP.pinch) EXP.radius = clamp(EXP.radius * EXP.pinch / d, 0.6, 320); EXP.pinch = d; } }, { passive: true });
+  cv.addEventListener('touchmove', e => { for (const t of e.changedTouches) touches.set(t.identifier, t); if (SEQ.explore && !WALK.on && touches.size === 2) { const [a, b] = [...touches.values()]; const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); if (EXP.pinch) EXP.radius = clamp(EXP.radius * EXP.pinch / d, 0.6, 320); EXP.pinch = d; } }, { passive: true });
   cv.addEventListener('touchend', e => { for (const t of e.changedTouches) touches.delete(t.identifier); if (touches.size < 2) EXP.pinch = 0; }, { passive: true });
   // map clicks jump to the nearest camera marker
   $('map').addEventListener('click', e => {
@@ -8106,7 +8419,7 @@ function initUI() {
     MAPV.markers.forEach((m, i) => { const d = Math.hypot(m.x - mx, m.y - my); if (d < bd) { bd = d; best = i; } });
     if (best >= 0) gotoShot(best);
   });
-  addEventListener('mousemove', showChrome);
+  addEventListener('mousemove', () => { if (!WALK.locked) showChrome(); });
   addEventListener('resize', layout);
   document.addEventListener('fullscreenchange', layout);
   layout();
@@ -8204,7 +8517,7 @@ function showChrome() {
   const app = $('app');
   app.classList.remove('idle');
   clearTimeout(chromeTimer);
-  chromeTimer = setTimeout(() => { if (SEQ.playing && !SEQ.explore) app.classList.add('idle'); }, 3500);
+  chromeTimer = setTimeout(() => { if ((SEQ.playing && !SEQ.explore) || WALK.on) app.classList.add('idle'); }, 3500);
 }
 
 UI.onShot = (i, transitioning) => {
@@ -8217,6 +8530,18 @@ UI.onShot = (i, transitioning) => {
   UI.chips.forEach((c, j) => { c.classList.toggle('on', j === i); c.classList.remove('next'); });
   UI.rows.forEach((r, j) => r.classList.toggle('on', j === i));
   if (!SEQ.explore) { const h = '#cam' + s.no; if (location.hash !== h) history.replaceState(null, '', h); }
+};
+UI.onWalk = on => {
+  $('app').classList.toggle('walk', on);
+  $('btn-walk').setAttribute('aria-pressed', on);
+  $('btn-explore').setAttribute('aria-pressed', SEQ.explore && !on);
+  if (on && document.activeElement !== $('view')) $('view').focus();   // so Space jumps instead of pressing the button
+  $('pad').hidden = !(on && IS_TOUCH);
+  $('hint').innerHTML = !on ? UI.hintExplore : IS_TOUCH ? '<b>Walk</b>Left thumb moves, harder runs · right thumb looks · E or Esc to leave'
+    : WALK.locked ? '<b>Walk</b>WASD move · Shift run · Space jump · C crouch · wheel to first person · Esc frees the mouse'
+    : `<b>Walk</b>${WALK.noLock ? 'Drag' : 'Click'} to look around · WASD move · Shift run · Space jump · C crouch · Esc returns to the cameras`;
+  if (on) { $('camno').textContent = 'WALK'; $('camname').textContent = 'On foot'; $('camjp').textContent = '散歩'; $('lens').textContent = '24 mm · T8 · eye level'; $('desc').textContent = 'You are in the street now. Kerbs, posts, cars and people are all solid.'; }
+  else if (SEQ.explore) UI.onExplore(true);
 };
 UI.onExplore = (on) => {
   $('app').classList.toggle('explore', on);
@@ -8313,7 +8638,7 @@ function drawMap(o) {
     g.beginPath(); g.arc(x, y, (on ? 3 : 1.8) * dpr, 0, TAU); g.fill();
     if (on || MAPV.labels) { g.font = `${9 * dpr}px ${FONTS.mono}`; g.fillText(s.no, x + 4 * dpr, y - 3 * dpr); }
   });
-  if (SEQ.explore && o) { const [x, y] = mapXY(o.pos.x, o.pos.z); g.fillStyle = '#7fe0ff'; g.beginPath(); g.arc(x, y, 3 * dpr, 0, TAU); g.fill(); }
+  if (SEQ.explore && o) { const p = WALK.on ? WALK : o.pos, [x, y] = mapXY(p.x, p.z); g.fillStyle = '#7fe0ff'; g.beginPath(); g.arc(x, y, 3 * dpr, 0, TAU); g.fill(); }
 }
 const MAP_CACHE = {};
 function evalShotCached(i) {
@@ -8355,7 +8680,7 @@ function buildAmbience(ctx) {
   const trG = ctx.createGain(); trG.gain.value = 0; src(0.35, 3.1).connect(trF).connect(trG).connect(master);
   const osc = ctx.createOscillator(); osc.type = 'sine'; osc.frequency.value = 2600;
   const chG = ctx.createGain(); chG.gain.value = 0; osc.connect(chG).connect(master); osc.start();
-  return { ctx, master, rainG, humG, carG, carF, carP, trG, chG, osc, muff };
+  return { ctx, master, rainG, humG, carG, carF, carP, trG, chG, osc, muff, noiseBuf };
 }
 function initAudio() { Object.assign(AUDIO, buildAmbience(new (window.AudioContext || window.webkitAudioContext)())); }
 
@@ -8634,6 +8959,7 @@ function frame(now) {
   STATE.realT += dtReal;
   updateSequencer(dtReal);
   const T = SEQ.world;
+  if (WALK.on) updateWalk(dtReal, T);
   U.uTime.value = T;
   updateWorld(T);
   renderNow(dtReal);
@@ -8657,7 +8983,7 @@ function renderNow(dtReal) {
   const P = {
     time: STATE.realT, exposure: o.exposure * BASE_EXPOSURE * (window.__exp || 1), focal: o.mm, fstop: o.T, focus: o.focus,
     bloom: 0.07, halation: 0.025, vignette: 0.34 + wide * 0.1, grain: (FILM.on ? 0.006 : 0.018) + (cctvActive ? 0.04 : 0), ca: 0.0007 + wide * 0.0012,
-    distort: look.distort, mb: REDUCED_MOTION ? 0 : clamp((1 / 48) / Math.max(dtReal, 1 / 240), 0, 1.6), sat: 1.06,
+    distort: look.distort, mb: REDUCED_MOTION ? 0 : clamp((1 / 48) / Math.max(dtReal, 1 / 240), 0, 1.6) * (WALK.on ? 0.4 : 1), sat: 1.06,
     cctv: look.cctv, glitch: look.glitch, wipe: look.wipe, wipeDir: look.wipeDir, fade: look.fade, drops: look.drops,
     refl: true, reflPlane: o.reflPlane, hold, cut: SEQ.cutFlag || look.cut, dof: DEBUG.dof, debugView: DEBUG.view,
   };
@@ -8715,7 +9041,7 @@ async function boot() {
     for (const wb of WALLS.values()) { const m = wb.build(winMat); if (m) scene.add(m); }
     buildACUnits();
     progress('People…', 0.64); await tick();
-    initCrowd([...buildCrowd(), ...riderAgents()]);
+    initCrowd([...buildCrowd(), ...riderAgents(), playerAgent()]);
     COMP = buildCompanions();
     buildHero();
     buildBikes();
@@ -8828,6 +9154,30 @@ if (TEST) {
     return { type: SEQ.tr ? SEQ.tr.type : 'none', dur: SEQ.tr ? +SEQ.tr.dur.toFixed(2) : 0, pos: currentPose.pos.toArray().map(v => +v.toFixed(2)), path: SEQ.tr && SEQ.tr.path ? SEQ.tr.path.map(q => q.toArray().map(v => +v.toFixed(1))) : null };
   };
   window.__film = { init: filmInit, frame: filmFrame, audio: filmAudio, chunk: filmAudioChunk };
+  // a still of the walking view: the person at (x, z) looking along yaw/pitch, the camera `dist` behind
+  window.__walk = async (x, z, yaw = 0, pitch = -0.1, dist = 2.6, t = 20, opts = {}) => {
+    SEQ.world = t; U.uTime.value = t; updateWorld(t);
+    document.getElementById('intro').style.display = 'none';
+    if (opts.hideUI) $('app').classList.add('uihidden');
+    if (!!opts.day !== DAY.on) setDay(!!opts.day);
+    setFilter(opts.filter == null ? 0 : FILTER_ID[opts.filter], true);
+    enterWalk();
+    Object.assign(WALK, { x, z, y: walkGround(x, z), yaw, pitch, dist, distS: dist, vx: 0, vy: 0, vz: 0, phase: opts.phase || 0, crouch: opts.crouch || 0, air: opts.air || 0 });
+    WALK.body = opts.body ?? yaw;
+    if (opts.v) { WALK.vx = Math.sin(WALK.body) * opts.v; WALK.vz = Math.cos(WALK.body) * opts.v; }
+    const v = [WALK.vx, WALK.vz]; updateWalk(1 / 60, t); [WALK.vx, WALK.vz] = v;
+    updateWorld(t); renderNow(1 / 60); renderNow(1 / 60);
+    await new Promise(r => requestAnimationFrame(() => r()));
+    return { x: +WALK.x.toFixed(2), y: +WALK.y.toFixed(3), z: +WALK.z.toFixed(2) };
+  };
+  // hold keys for a while at 60 Hz, without rendering, and report where the walker got to after each step
+  window.__walkSim = (steps, t = 20) => steps.map(([keys, secs]) => {
+    WALK.keys = Object.fromEntries(keys.map(k => [k, true]));
+    let top = WALK.y;
+    for (let i = 0; i < Math.round(secs * 60); i++) { updateWalk(1 / 60, t); top = Math.max(top, WALK.y); }
+    WALK.keys = {};
+    return { keys: keys.join('+'), x: +WALK.x.toFixed(2), y: +WALK.y.toFixed(3), z: +WALK.z.toFixed(2), top: +top.toFixed(2), grounded: WALK.grounded };
+  });
   window.__explore = async (pos, target, t = 20) => {
     SEQ.world = t; U.uTime.value = t; updateWorld(t);
     enterExplore();
