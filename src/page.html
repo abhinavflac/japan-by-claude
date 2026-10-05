@@ -53,6 +53,8 @@ button{font:inherit;color:inherit}
 .tc{justify-self:end;text-align:right;font-family:var(--f-mono)}
 .tc #tc{font-size:15px;letter-spacing:.06em;font-variant-numeric:tabular-nums}
 .tc .lbl{font-size:10px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase}
+.modes{display:flex;justify-content:flex-end;gap:4px;margin-top:6px}
+.modes .btn{height:26px;font-family:var(--f-ui)}
 
 /* ---------- bottom bar ---------- */
 #bottom{position:absolute;left:0;right:0;bottom:0;min-height:var(--bar-bot);box-sizing:border-box;
@@ -100,6 +102,21 @@ button{font:inherit;color:inherit}
 .idx-row .nm{font-size:13px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .idx-row .mm{font:400 11px var(--f-mono);color:var(--ink-3)}
 
+/* ---------- looks ---------- */
+#looks{position:absolute;right:16px;top:calc(var(--bar-top) + 10px);width:min(300px,calc(100% - 32px));max-height:calc(100% - var(--bar-top) - var(--bar-bot) - 30px);
+  overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px;box-sizing:border-box;z-index:22;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+#looks h2{margin:0 0 8px;font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3)}
+.look-row{appearance:none;background:none;border:0;border-top:1px solid var(--line);display:grid;grid-template-columns:10px 1fr auto;align-items:center;gap:8px;
+  width:100%;padding:7px 4px;text-align:left;cursor:pointer;color:var(--ink-2)}
+.look-row:hover{color:var(--ink);background:var(--ink-4)}
+.look-row:focus-visible{outline:2px solid var(--sodium);outline-offset:-2px}
+.look-row.on{color:var(--ink)}
+.look-row .no{width:6px;height:6px;border-radius:50%}
+.look-row.on .no{background:var(--tally);box-shadow:0 0 8px var(--tally)}
+.look-row .nm{font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+.look-row .jp{font-family:var(--f-display);font-size:12px;color:var(--ink-3)}
+
 /* ---------- map ---------- */
 #mapwrap{position:absolute;right:16px;top:calc(var(--stage-top) + 12px);z-index:10;border-radius:3px;overflow:hidden;
   background:rgba(6,8,11,.66);border:1px solid var(--line);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:opacity .5s}
@@ -113,6 +130,21 @@ button{font:inherit;color:inherit}
 #cctv .bl{position:absolute;left:3%;bottom:6%}
 #cctv .rec{width:9px;height:9px;border-radius:50%;background:#ff3b30;animation:blink 1s steps(2,start) infinite}
 @keyframes blink{to{visibility:hidden}}
+#osd{position:absolute;inset:0;pointer-events:none;font:400 clamp(15px,2.3vw,32px)/1.2 "DotGothic16",var(--f-mono);color:#f4f4f0;letter-spacing:.08em;text-shadow:.12em .12em 0 rgba(0,0,0,.5)}
+#osd .tl{position:absolute;left:5%;top:8%}
+#osd .tr{position:absolute;right:5%;top:8%}
+#osd .bl{position:absolute;left:5%;bottom:9%}
+#thermhud{position:absolute;inset:0;pointer-events:none;font:500 12px var(--f-mono);color:rgba(255,255,255,.88);letter-spacing:.08em;text-shadow:0 0 3px #000}
+#thermhud .tl{position:absolute;left:3%;top:6%}
+#cctv:not([hidden]) ~ #osd,#cctv:not([hidden]) ~ #thermhud .tl{display:none}
+#thermhud .scale{position:absolute;right:3%;top:24%;bottom:24%;width:9px;border:1px solid rgba(255,255,255,.55);
+  background:linear-gradient(to top,#00000d,#2b056b 20%,#99108c 40%,#eb401a 60%,#ffa30f 78%,#fff073 93%,#fff)}
+#thermhud .scale span{position:absolute;right:16px;transform:translateY(-50%);white-space:nowrap}
+#thermhud .ret{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px}
+#thermhud .ret::before,#thermhud .ret::after{content:"";position:absolute;background:rgba(255,255,255,.8)}
+#thermhud .ret::before{left:0;right:0;top:50%;height:1px}
+#thermhud .ret::after{top:0;bottom:0;left:50%;width:1px}
+#dip{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .25s ease}
 #endcard{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;pointer-events:none;
   text-align:center;opacity:0;transition:opacity 1.2s ease}
 #endcard .e1{font-weight:500;font-size:clamp(14px,2.2vw,26px);letter-spacing:.42em;text-transform:uppercase;padding-left:.42em}
@@ -190,6 +222,9 @@ button{font:inherit;color:inherit}
       <div class="tr"><span class="rec"></span><span>REC</span></div>
       <div class="bl">AKARI-CHO SHOTENGAI ASSN · 12.5 FPS</div>
     </div>
+    <div id="osd" hidden><div class="tl">PLAY ▶</div><div class="tr">SP</div><div class="bl"><div id="osd-time">PM 7:42</div><div>OCT. 4 2026</div></div></div>
+    <div id="thermhud" hidden><div class="tl">THERMAL · IRON · AUTO · 9 Hz</div><div class="ret"></div><div class="scale"><span style="top:0">36°C</span><span style="top:50%">22°C</span><span style="top:100%">8°C</span></div></div>
+    <div id="dip"></div>
     <div id="endcard"><div class="e1">One world. One moment. 24 cameras.</div><div class="e2">ひとつの街、ひとつの瞬間、二十四台のカメラ</div></div>
   </div>
 
@@ -203,7 +238,12 @@ button{font:inherit;color:inherit}
       <div class="lens" id="lens">32 mm · T5.6 · 180° · ISO 800</div>
       <div class="desc" id="desc"></div>
     </div>
-    <div class="tc"><div id="tc">19:42:00:00</div><div class="lbl" id="tclbl">World clock · 24 fps</div></div>
+    <div class="tc"><div id="tc">19:42:00:00</div><div class="lbl" id="tclbl">World clock · 24 fps</div>
+      <div class="modes">
+        <button class="btn" id="btn-day" aria-pressed="false" title="Day or night (N)">Night</button>
+        <button class="btn" id="btn-look" aria-expanded="false" aria-controls="looks" title="Look (V)">Cinema</button>
+      </div>
+    </div>
   </header>
 
   <div id="mapwrap"><canvas id="map" width="300" height="118" aria-label="Map of camera positions"></canvas><div class="cap">Plan · 24 cameras</div></div>
@@ -238,6 +278,10 @@ button{font:inherit;color:inherit}
     <h2>Camera index · one street, twenty-four positions</h2>
     <div class="idx" id="idx"></div>
   </aside>
+  <aside id="looks" hidden aria-label="Looks">
+    <h2>Look · press V to cycle</h2>
+    <div id="lookrows"></div>
+  </aside>
   <div id="chiptip" hidden></div>
   <div id="hint" hidden><b>Explore</b>Drag to orbit · right-drag to pan · scroll to zoom · WASD to move · Esc returns to the cameras</div>
   <div id="toast" aria-live="polite"></div>
@@ -253,6 +297,8 @@ button{font:inherit;color:inherit}
         <dt>A</dt><dd>Auto-advance through the sequence</dd>
         <dt>E</dt><dd>Free camera; pause first to walk around a frozen moment</dd>
         <dt>[ ]</dt><dd>Slower or faster playback</dd>
+        <dt>N</dt><dd>Day or night: the same minute at 08:42 or 19:42</dd>
+        <dt>V</dt><dd>Next look: noir, vintage, VHS, 8-bit, anime, thermal, night vision, tilt-shift (Shift goes back)</dd>
         <dt>C · M</dt><dd>Camera index · map</dd>
         <dt>H · F</dt><dd>Hide the interface · fullscreen</dd>
       </dl>
@@ -268,7 +314,7 @@ button{font:inherit;color:inherit}
         <button id="begin" disabled>Begin</button>
         <div class="iprog"><div class="bar"><i id="ibar"></i></div><div class="t" id="itext">Loading type…</div></div>
       </div>
-      <div class="ikeys">Space play · ← → cameras · E explore · H hide · F fullscreen · ? keys</div>
+      <div class="ikeys">Space play · ← → cameras · E explore · V looks · H hide · F fullscreen · ? keys</div>
     </div>
   </div>
   <div id="fatal" hidden></div>

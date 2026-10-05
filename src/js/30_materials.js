@@ -21,6 +21,9 @@ const U = {
   uCamPos: { value: new THREE.Vector3() },
   uFP0: { value: new THREE.Vector4(4.1, -2.6, 0.8, 1.75) },   // a puddle on the pavement in front of him
   uFP1: { value: new THREE.Vector4(-2.05, 3.6, 0.95, 1.5) },   // and one in the west gutter, across from him
+  uDay: { value: 0 },
+  uSunH: { value: null },
+  uSunRect: { value: new THREE.Vector4(-260, -340, 520, 620) },
 };
 
 /* ---------- height fog with warm city haze near the ground ---------- */
@@ -100,6 +103,25 @@ const LF_APPLY = /* glsl */`
   reflectedLight.indirectDiffuse += lfs.rgb * lfs.rgb * uLFGain * hf * BRDF_Lambert( material.diffuseColor ) * uLFS;
 }
 #endif`;
+
+// By day the sun is hidden behind the blocks: the baked map holds, for each point of the plan, the height
+// below which a block stands between it and the sun. Sampled a little off the surface so walls don't shade themselves.
+const SUN_PARS = /* glsl */`
+uniform float uDay; uniform sampler2D uSunH; uniform vec4 uSunRect;
+float sunVisible(vec3 wp, vec3 wn){
+  vec3 p = wp + wn * 0.4;
+  vec2 uv = (p.xz - uSunRect.xy) / uSunRect.zw;
+  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return 1.0;
+  float h = texture2D(uSunH, uv).r;
+  return smoothstep(h - 0.15, h + 0.15, p.y);
+}`;
+const SUN_LIGHTS = THREE.ShaderChunk.lights_fragment_begin
+  .replace('IncidentLight directLight;', `IncidentLight directLight;
+float sunVis = 1.0;
+#ifdef USE_FOG
+  if (uDay > 0.0) sunVis = mix(1.0, sunVisible(vFogWorldPosition, inverseTransformDirection(nonPerturbedNormal, viewMatrix)), uDay);
+#endif`)
+  .replace('getDirectionalLightInfo( directionalLight, directLight );', 'getDirectionalLightInfo( directionalLight, directLight );\n\t\tdirectLight.color *= sunVis;');
 
 const WET_PARS = /* glsl */`
 uniform sampler2D uRefl; uniform mat4 uReflMat; uniform float uReflOn; uniform vec2 uReflTexel;
@@ -225,11 +247,19 @@ function patchStd(m, opts = {}) {
   m.onBeforeCompile = (s) => {
     s.uniforms.uTime = U.uTime;
     s.uniforms.uLF = U.uLF; s.uniforms.uLFRect = U.uLFRect; s.uniforms.uLFGain = U.uLFGain;
+    s.uniforms.uDay = U.uDay; s.uniforms.uSunH = U.uSunH; s.uniforms.uSunRect = U.uSunRect;
     Object.assign(s.uniforms, own);
     let vs = s.vertexShader, fs = s.fragmentShader;
     const isLit = fs.includes('#include <lights_fragment_end>');
-    fs = fs.replace('#include <common>', '#include <common>\n' + GLSL_HASH + LF_PARS + '\nuniform float uTime;\nuniform float uGlassSpec;\n');
+    fs = fs.replace('#include <common>', '#include <common>\n' + GLSL_HASH + LF_PARS + SUN_PARS + '\nuniform float uTime;\nuniform float uGlassSpec;\n');
     if (o.lf && isLit) fs = fs.replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n' + LF_APPLY);
+    if (isLit) fs = fs.replace('#include <lights_fragment_begin>', SUN_LIGHTS);
+    // painted lit windows turn to dark glass by day, and their glow fades
+    fs = fs.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+      #ifdef USE_EMISSIVEMAP
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.03, 0.035, 0.042), smoothstep(0.04, 0.25, max(emissiveColor.r, max(emissiveColor.g, emissiveColor.b))) * uDay);
+        totalEmissiveRadiance *= 1.0 - 0.88 * uDay;
+      #endif`);
     if (o.wet) {
       Object.assign(s.uniforms, { uRefl: U.uRefl, uReflMat: U.uReflMat, uReflOn: U.uReflOn, uReflTexel: U.uReflTexel, uPuddle: U.uPuddle, uRain: U.uRain, uFP0: U.uFP0, uFP1: U.uFP1 });
       let defs = '';
@@ -298,6 +328,7 @@ function buildBaseMaterials() {
     { glass: { spec: 1.0 }, lf: false });
   M.glassDark = std({ color: 0x05070a, roughness: 0.06, metalness: 0.0, envMapIntensity: 1.4 }, { lf: false });
   M.glow = basic({ vertexColors: true, toneMapped: false });
+  M.lamp = basic({ vertexColors: true, toneMapped: false });   // street lamp and arch bulbs, off by day
   M.blackout = basic({ color: 0x020203 });
 }
 
@@ -308,6 +339,7 @@ function windowedMaterial(instanced) {
   m.onBeforeCompile = (s) => {
     s.uniforms.uLF = U.uLF; s.uniforms.uLFRect = U.uLFRect; s.uniforms.uLFGain = U.uLFGain;
     s.uniforms.uLFH = { value: 0.3 }; s.uniforms.uLFS = { value: 1.0 };
+    s.uniforms.uDay = U.uDay; s.uniforms.uSunH = U.uSunH; s.uniforms.uSunRect = U.uSunRect;
     s.vertexShader = s.vertexShader
       .replace('#include <common>', `#include <common>
         attribute vec4 aWall;
@@ -326,6 +358,7 @@ function windowedMaterial(instanced) {
       .replace('#include <common>', `#include <common>
         ${GLSL_HASH}
         ${LF_PARS}
+        ${SUN_PARS}
         varying vec4 vWall;
         varying float vRoof;`)
       .replace('#include <map_fragment>', `#include <map_fragment>
@@ -347,7 +380,7 @@ function windowedMaterial(instanced) {
           float br = 0.35 + 0.9 * h12(cell + 5.1);
           float curtain = step(0.55, h12(cell + 9.3));
           float pattern = mix(1.0, 0.45 + 0.55 * step(0.5, fract(f.x * 9.0)), curtain);
-          winEmit = wc * br * lit * pattern * 1.35;
+          winEmit = wc * br * lit * pattern * 1.35 * (1.0 - 0.92 * uDay);
           winMask = inWin;
           float band = smoothstep(0.96, 1.0, f.y) * (1.0 - vRoof);
           diffuseColor.rgb *= 1.0 - band * 0.3;
@@ -358,6 +391,7 @@ function windowedMaterial(instanced) {
         roughnessFactor = mix(roughnessFactor, 0.12, winMask);`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
         totalEmissiveRadiance += winEmit;`)
+      .replace('#include <lights_fragment_begin>', SUN_LIGHTS)
       .replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n' + LF_APPLY.replace('LF_HEIGHT', '0.3').replace('LF_STRENGTH', '1.0'));
   };
   return m;

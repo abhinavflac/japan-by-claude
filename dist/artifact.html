@@ -53,6 +53,8 @@ button{font:inherit;color:inherit}
 .tc{justify-self:end;text-align:right;font-family:var(--f-mono)}
 .tc #tc{font-size:15px;letter-spacing:.06em;font-variant-numeric:tabular-nums}
 .tc .lbl{font-size:10px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase}
+.modes{display:flex;justify-content:flex-end;gap:4px;margin-top:6px}
+.modes .btn{height:26px;font-family:var(--f-ui)}
 
 /* ---------- bottom bar ---------- */
 #bottom{position:absolute;left:0;right:0;bottom:0;min-height:var(--bar-bot);box-sizing:border-box;
@@ -100,6 +102,21 @@ button{font:inherit;color:inherit}
 .idx-row .nm{font-size:13px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .idx-row .mm{font:400 11px var(--f-mono);color:var(--ink-3)}
 
+/* ---------- looks ---------- */
+#looks{position:absolute;right:16px;top:calc(var(--bar-top) + 10px);width:min(300px,calc(100% - 32px));max-height:calc(100% - var(--bar-top) - var(--bar-bot) - 30px);
+  overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px;box-sizing:border-box;z-index:22;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+#looks h2{margin:0 0 8px;font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3)}
+.look-row{appearance:none;background:none;border:0;border-top:1px solid var(--line);display:grid;grid-template-columns:10px 1fr auto;align-items:center;gap:8px;
+  width:100%;padding:7px 4px;text-align:left;cursor:pointer;color:var(--ink-2)}
+.look-row:hover{color:var(--ink);background:var(--ink-4)}
+.look-row:focus-visible{outline:2px solid var(--sodium);outline-offset:-2px}
+.look-row.on{color:var(--ink)}
+.look-row .no{width:6px;height:6px;border-radius:50%}
+.look-row.on .no{background:var(--tally);box-shadow:0 0 8px var(--tally)}
+.look-row .nm{font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+.look-row .jp{font-family:var(--f-display);font-size:12px;color:var(--ink-3)}
+
 /* ---------- map ---------- */
 #mapwrap{position:absolute;right:16px;top:calc(var(--stage-top) + 12px);z-index:10;border-radius:3px;overflow:hidden;
   background:rgba(6,8,11,.66);border:1px solid var(--line);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:opacity .5s}
@@ -113,6 +130,21 @@ button{font:inherit;color:inherit}
 #cctv .bl{position:absolute;left:3%;bottom:6%}
 #cctv .rec{width:9px;height:9px;border-radius:50%;background:#ff3b30;animation:blink 1s steps(2,start) infinite}
 @keyframes blink{to{visibility:hidden}}
+#osd{position:absolute;inset:0;pointer-events:none;font:400 clamp(15px,2.3vw,32px)/1.2 "DotGothic16",var(--f-mono);color:#f4f4f0;letter-spacing:.08em;text-shadow:.12em .12em 0 rgba(0,0,0,.5)}
+#osd .tl{position:absolute;left:5%;top:8%}
+#osd .tr{position:absolute;right:5%;top:8%}
+#osd .bl{position:absolute;left:5%;bottom:9%}
+#thermhud{position:absolute;inset:0;pointer-events:none;font:500 12px var(--f-mono);color:rgba(255,255,255,.88);letter-spacing:.08em;text-shadow:0 0 3px #000}
+#thermhud .tl{position:absolute;left:3%;top:6%}
+#cctv:not([hidden]) ~ #osd,#cctv:not([hidden]) ~ #thermhud .tl{display:none}
+#thermhud .scale{position:absolute;right:3%;top:24%;bottom:24%;width:9px;border:1px solid rgba(255,255,255,.55);
+  background:linear-gradient(to top,#00000d,#2b056b 20%,#99108c 40%,#eb401a 60%,#ffa30f 78%,#fff073 93%,#fff)}
+#thermhud .scale span{position:absolute;right:16px;transform:translateY(-50%);white-space:nowrap}
+#thermhud .ret{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px}
+#thermhud .ret::before,#thermhud .ret::after{content:"";position:absolute;background:rgba(255,255,255,.8)}
+#thermhud .ret::before{left:0;right:0;top:50%;height:1px}
+#thermhud .ret::after{top:0;bottom:0;left:50%;width:1px}
+#dip{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .25s ease}
 #endcard{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;pointer-events:none;
   text-align:center;opacity:0;transition:opacity 1.2s ease}
 #endcard .e1{font-weight:500;font-size:clamp(14px,2.2vw,26px);letter-spacing:.42em;text-transform:uppercase;padding-left:.42em}
@@ -190,6 +222,9 @@ button{font:inherit;color:inherit}
       <div class="tr"><span class="rec"></span><span>REC</span></div>
       <div class="bl">AKARI-CHO SHOTENGAI ASSN · 12.5 FPS</div>
     </div>
+    <div id="osd" hidden><div class="tl">PLAY ▶</div><div class="tr">SP</div><div class="bl"><div id="osd-time">PM 7:42</div><div>OCT. 4 2026</div></div></div>
+    <div id="thermhud" hidden><div class="tl">THERMAL · IRON · AUTO · 9 Hz</div><div class="ret"></div><div class="scale"><span style="top:0">36°C</span><span style="top:50%">22°C</span><span style="top:100%">8°C</span></div></div>
+    <div id="dip"></div>
     <div id="endcard"><div class="e1">One world. One moment. 24 cameras.</div><div class="e2">ひとつの街、ひとつの瞬間、二十四台のカメラ</div></div>
   </div>
 
@@ -203,7 +238,12 @@ button{font:inherit;color:inherit}
       <div class="lens" id="lens">32 mm · T5.6 · 180° · ISO 800</div>
       <div class="desc" id="desc"></div>
     </div>
-    <div class="tc"><div id="tc">19:42:00:00</div><div class="lbl" id="tclbl">World clock · 24 fps</div></div>
+    <div class="tc"><div id="tc">19:42:00:00</div><div class="lbl" id="tclbl">World clock · 24 fps</div>
+      <div class="modes">
+        <button class="btn" id="btn-day" aria-pressed="false" title="Day or night (N)">Night</button>
+        <button class="btn" id="btn-look" aria-expanded="false" aria-controls="looks" title="Look (V)">Cinema</button>
+      </div>
+    </div>
   </header>
 
   <div id="mapwrap"><canvas id="map" width="300" height="118" aria-label="Map of camera positions"></canvas><div class="cap">Plan · 24 cameras</div></div>
@@ -238,6 +278,10 @@ button{font:inherit;color:inherit}
     <h2>Camera index · one street, twenty-four positions</h2>
     <div class="idx" id="idx"></div>
   </aside>
+  <aside id="looks" hidden aria-label="Looks">
+    <h2>Look · press V to cycle</h2>
+    <div id="lookrows"></div>
+  </aside>
   <div id="chiptip" hidden></div>
   <div id="hint" hidden><b>Explore</b>Drag to orbit · right-drag to pan · scroll to zoom · WASD to move · Esc returns to the cameras</div>
   <div id="toast" aria-live="polite"></div>
@@ -253,6 +297,8 @@ button{font:inherit;color:inherit}
         <dt>A</dt><dd>Auto-advance through the sequence</dd>
         <dt>E</dt><dd>Free camera; pause first to walk around a frozen moment</dd>
         <dt>[ ]</dt><dd>Slower or faster playback</dd>
+        <dt>N</dt><dd>Day or night: the same minute at 08:42 or 19:42</dd>
+        <dt>V</dt><dd>Next look: noir, vintage, VHS, 8-bit, anime, thermal, night vision, tilt-shift (Shift goes back)</dd>
         <dt>C · M</dt><dd>Camera index · map</dd>
         <dt>H · F</dt><dd>Hide the interface · fullscreen</dd>
       </dl>
@@ -268,7 +314,7 @@ button{font:inherit;color:inherit}
         <button id="begin" disabled>Begin</button>
         <div class="iprog"><div class="bar"><i id="ibar"></i></div><div class="t" id="itext">Loading type…</div></div>
       </div>
-      <div class="ikeys">Space play · ← → cameras · E explore · H hide · F fullscreen · ? keys</div>
+      <div class="ikeys">Space play · ← → cameras · E explore · V looks · H hide · F fullscreen · ? keys</div>
     </div>
   </div>
   <div id="fatal" hidden></div>
@@ -1044,6 +1090,9 @@ const U = {
   uCamPos: { value: new THREE.Vector3() },
   uFP0: { value: new THREE.Vector4(4.1, -2.6, 0.8, 1.75) },   // a puddle on the pavement in front of him
   uFP1: { value: new THREE.Vector4(-2.05, 3.6, 0.95, 1.5) },   // and one in the west gutter, across from him
+  uDay: { value: 0 },
+  uSunH: { value: null },
+  uSunRect: { value: new THREE.Vector4(-260, -340, 520, 620) },
 };
 
 /* ---------- height fog with warm city haze near the ground ---------- */
@@ -1123,6 +1172,25 @@ const LF_APPLY = /* glsl */`
   reflectedLight.indirectDiffuse += lfs.rgb * lfs.rgb * uLFGain * hf * BRDF_Lambert( material.diffuseColor ) * uLFS;
 }
 #endif`;
+
+// By day the sun is hidden behind the blocks: the baked map holds, for each point of the plan, the height
+// below which a block stands between it and the sun. Sampled a little off the surface so walls don't shade themselves.
+const SUN_PARS = /* glsl */`
+uniform float uDay; uniform sampler2D uSunH; uniform vec4 uSunRect;
+float sunVisible(vec3 wp, vec3 wn){
+  vec3 p = wp + wn * 0.4;
+  vec2 uv = (p.xz - uSunRect.xy) / uSunRect.zw;
+  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return 1.0;
+  float h = texture2D(uSunH, uv).r;
+  return smoothstep(h - 0.15, h + 0.15, p.y);
+}`;
+const SUN_LIGHTS = THREE.ShaderChunk.lights_fragment_begin
+  .replace('IncidentLight directLight;', `IncidentLight directLight;
+float sunVis = 1.0;
+#ifdef USE_FOG
+  if (uDay > 0.0) sunVis = mix(1.0, sunVisible(vFogWorldPosition, inverseTransformDirection(nonPerturbedNormal, viewMatrix)), uDay);
+#endif`)
+  .replace('getDirectionalLightInfo( directionalLight, directLight );', 'getDirectionalLightInfo( directionalLight, directLight );\n\t\tdirectLight.color *= sunVis;');
 
 const WET_PARS = /* glsl */`
 uniform sampler2D uRefl; uniform mat4 uReflMat; uniform float uReflOn; uniform vec2 uReflTexel;
@@ -1248,11 +1316,19 @@ function patchStd(m, opts = {}) {
   m.onBeforeCompile = (s) => {
     s.uniforms.uTime = U.uTime;
     s.uniforms.uLF = U.uLF; s.uniforms.uLFRect = U.uLFRect; s.uniforms.uLFGain = U.uLFGain;
+    s.uniforms.uDay = U.uDay; s.uniforms.uSunH = U.uSunH; s.uniforms.uSunRect = U.uSunRect;
     Object.assign(s.uniforms, own);
     let vs = s.vertexShader, fs = s.fragmentShader;
     const isLit = fs.includes('#include <lights_fragment_end>');
-    fs = fs.replace('#include <common>', '#include <common>\n' + GLSL_HASH + LF_PARS + '\nuniform float uTime;\nuniform float uGlassSpec;\n');
+    fs = fs.replace('#include <common>', '#include <common>\n' + GLSL_HASH + LF_PARS + SUN_PARS + '\nuniform float uTime;\nuniform float uGlassSpec;\n');
     if (o.lf && isLit) fs = fs.replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n' + LF_APPLY);
+    if (isLit) fs = fs.replace('#include <lights_fragment_begin>', SUN_LIGHTS);
+    // painted lit windows turn to dark glass by day, and their glow fades
+    fs = fs.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+      #ifdef USE_EMISSIVEMAP
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.03, 0.035, 0.042), smoothstep(0.04, 0.25, max(emissiveColor.r, max(emissiveColor.g, emissiveColor.b))) * uDay);
+        totalEmissiveRadiance *= 1.0 - 0.88 * uDay;
+      #endif`);
     if (o.wet) {
       Object.assign(s.uniforms, { uRefl: U.uRefl, uReflMat: U.uReflMat, uReflOn: U.uReflOn, uReflTexel: U.uReflTexel, uPuddle: U.uPuddle, uRain: U.uRain, uFP0: U.uFP0, uFP1: U.uFP1 });
       let defs = '';
@@ -1321,6 +1397,7 @@ function buildBaseMaterials() {
     { glass: { spec: 1.0 }, lf: false });
   M.glassDark = std({ color: 0x05070a, roughness: 0.06, metalness: 0.0, envMapIntensity: 1.4 }, { lf: false });
   M.glow = basic({ vertexColors: true, toneMapped: false });
+  M.lamp = basic({ vertexColors: true, toneMapped: false });   // street lamp and arch bulbs, off by day
   M.blackout = basic({ color: 0x020203 });
 }
 
@@ -1331,6 +1408,7 @@ function windowedMaterial(instanced) {
   m.onBeforeCompile = (s) => {
     s.uniforms.uLF = U.uLF; s.uniforms.uLFRect = U.uLFRect; s.uniforms.uLFGain = U.uLFGain;
     s.uniforms.uLFH = { value: 0.3 }; s.uniforms.uLFS = { value: 1.0 };
+    s.uniforms.uDay = U.uDay; s.uniforms.uSunH = U.uSunH; s.uniforms.uSunRect = U.uSunRect;
     s.vertexShader = s.vertexShader
       .replace('#include <common>', `#include <common>
         attribute vec4 aWall;
@@ -1349,6 +1427,7 @@ function windowedMaterial(instanced) {
       .replace('#include <common>', `#include <common>
         ${GLSL_HASH}
         ${LF_PARS}
+        ${SUN_PARS}
         varying vec4 vWall;
         varying float vRoof;`)
       .replace('#include <map_fragment>', `#include <map_fragment>
@@ -1370,7 +1449,7 @@ function windowedMaterial(instanced) {
           float br = 0.35 + 0.9 * h12(cell + 5.1);
           float curtain = step(0.55, h12(cell + 9.3));
           float pattern = mix(1.0, 0.45 + 0.55 * step(0.5, fract(f.x * 9.0)), curtain);
-          winEmit = wc * br * lit * pattern * 1.35;
+          winEmit = wc * br * lit * pattern * 1.35 * (1.0 - 0.92 * uDay);
           winMask = inWin;
           float band = smoothstep(0.96, 1.0, f.y) * (1.0 - vRoof);
           diffuseColor.rgb *= 1.0 - band * 0.3;
@@ -1381,6 +1460,7 @@ function windowedMaterial(instanced) {
         roughnessFactor = mix(roughnessFactor, 0.12, winMask);`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
         totalEmissiveRadiance += winEmit;`)
+      .replace('#include <lights_fragment_begin>', SUN_LIGHTS)
       .replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n' + LF_APPLY.replace('LF_HEIGHT', '0.3').replace('LF_STRENGTH', '1.0'));
   };
   return m;
@@ -3693,7 +3773,7 @@ function buildLamps() {
     wadd('metal', M.metal, G.box, mat(x + side * 0.0, CURB_H + 4.55, z, 0, 0, 0, 0.06, 0.06, 0.9), post, { colors: true });
     for (const dz of [-0.45, 0.45]) {
       const hp = V3(x, CURB_H + 4.28, z + dz);
-      wadd('glowc', M.glow, G.sph12, mat(hp.x, hp.y, hp.z, 0, 0, 0, 0.34, 0.42, 0.34), hdr(16, 11.5, 6.8), { colors: true });
+      wadd('lampc', M.lamp, G.sph12, mat(hp.x, hp.y, hp.z, 0, 0, 0, 0.34, 0.42, 0.34), hdr(16, 11.5, 6.8), { colors: true });
       wadd('metal', M.metal, G.cyl8, mat(hp.x, hp.y + 0.25, hp.z, 0, 0, 0, 0.36, 0.07, 0.36), post, { colors: true });
       LAMPS.push(hp);
     }
@@ -3715,8 +3795,8 @@ function buildArch() {
   wadd('signs', M.signs, atlasPlane(front), mat(0, 6.98, z + 0.23, 0, 0, 0, 9.6, 1.0, 1));
   wadd('signs', M.signs, atlasPlane(back), mat(0, 6.98, z - 0.23, Math.PI, 0, 0, 9.6, 1.0, 1));
   for (let x = -4.8; x <= 4.8; x += 0.4) for (const dz of [0.26, -0.26]) {
-    wadd('glowc', M.glow, G.sph8, mat(x, 6.38, z + dz, 0, 0, 0, 0.07, 0.07, 0.07), hdr(9, 7, 4), { colors: true });
-    wadd('glowc', M.glow, G.sph8, mat(x, 7.6, z + dz, 0, 0, 0, 0.07, 0.07, 0.07), hdr(9, 7, 4), { colors: true });
+    wadd('lampc', M.lamp, G.sph8, mat(x, 6.38, z + dz, 0, 0, 0, 0.07, 0.07, 0.07), hdr(9, 7, 4), { colors: true });
+    wadd('lampc', M.lamp, G.sph8, mat(x, 7.6, z + dz, 0, 0, 0, 0.07, 0.07, 0.07), hdr(9, 7, 4), { colors: true });
   }
   SIGN_GLOWS.push({ p: V3(0, 7.0, z + 0.6), size: 6.5, color: new THREE.Color('#ffe8c8').multiplyScalar(0.05) });
   SIGN_GLOWS.push({ p: V3(0, 7.0, z - 0.6), size: 6.5, color: new THREE.Color('#ffe8c8').multiplyScalar(0.04) });
@@ -4272,7 +4352,7 @@ function buildBackBlocks() {
   lamps.forEach((p, i) => lampIM.setMatrixAt(i, mat(p.x, p.y, p.z, 0, 0, 0, 0.3, 0.3, 0.3)));
   scene.add(lampIM);
   BACK_LAMPS.push(...lamps);
-  const pools = new THREE.InstancedMesh(G.ground, new THREE.MeshBasicMaterial({ map: TEX.glow, color: new THREE.Color(0.55, 0.42, 0.28), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), lamps.length);
+  const pools = new THREE.InstancedMesh(G.ground, M.backPool = new THREE.MeshBasicMaterial({ map: TEX.glow, color: new THREE.Color(0.55, 0.42, 0.28), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), lamps.length);
   lamps.forEach((p, i) => pools.setMatrixAt(i, mat(p.x, -0.04, p.z, 0, 0, 0, 13, 1, 13)));
   pools.layers.set(LAYER_NOREFL);
   scene.add(pools);
@@ -4320,15 +4400,15 @@ function buildSkyline() {
 }
 const AVIATION = [];
 
-/* ---------- sky: blue hour, clouds lit from below by the city ---------- */
+/* ---------- sky: blue hour, clouds lit from below by the city; by day, washed blue and heaped cloud ---------- */
 function buildSky() {
   const m = new THREE.ShaderMaterial({
-    uniforms: { uTime: U.uTime },
+    uniforms: { uTime: U.uTime, uDay: U.uDay, uSunDir: { value: SUN.dir } },
     vertexShader: /* glsl */`
       varying vec3 vDir;
       void main(){ vDir = position; vec4 p = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * p; gl_Position.z = gl_Position.w * 0.99999; }`,
     fragmentShader: /* glsl */`
-      varying vec3 vDir; uniform float uTime;
+      varying vec3 vDir; uniform float uTime, uDay; uniform vec3 uSunDir;
       float hs(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float ns(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f*f*(3.0-2.0*f); return mix(mix(hs(i), hs(i+vec2(1,0)), u.x), mix(hs(i+vec2(0,1)), hs(i+vec2(1,1)), u.x), u.y); }
       float fbm(vec2 p){ float s = 0.0, a = 0.5; for (int i = 0; i < 5; i++){ s += a * ns(p); p = p * 2.03 + 7.1; a *= 0.5; } return s; }
@@ -4357,6 +4437,18 @@ function buildSky() {
           col += vec3(0.5, 0.52, 0.6) * pow(mm, 900.0) * (1.0 - cloud * 0.8) + vec3(0.05, 0.055, 0.07) * pow(mm, 18.0);
         } else {
           col = mix(hor * 0.7, vec3(0.02), smoothstep(0.0, -0.2, h));
+        }
+        if (uDay > 0.0) {
+          vec3 dhor = vec3(0.5, 0.6, 0.72);
+          vec3 day = mix(dhor, vec3(0.07, 0.17, 0.42), pow(clamp(h, 0.0, 1.0), 0.55));
+          float sd = max(dot(d, uSunDir), 0.0);
+          day += vec3(1.0, 0.86, 0.66) * (pow(sd, 8.0) * 0.45 + pow(sd, 200.0) * 1.5) + vec3(40.0, 37.0, 32.0) * smoothstep(0.99985, 0.99993, sd);
+          if (h > 0.0) {
+            float c = fbm((d.xz / (h + 0.1) * 0.7 + vec2(uTime * 0.01, uTime * 0.004)) * 0.5);
+            vec3 cc = mix(vec3(0.42, 0.45, 0.5), vec3(1.05, 1.02, 0.98) * (0.6 + 0.5 * pow(sd, 3.0)), smoothstep(0.5, 0.85, c));
+            day = mix(day, cc, smoothstep(0.5, 0.75, c) * smoothstep(0.0, 0.12, h) * 0.92);
+          } else day = mix(dhor * 0.85, vec3(0.25, 0.26, 0.27), smoothstep(0.0, -0.2, h));
+          col = mix(col, day, uDay);
         }
         gl_FragColor = vec4(col, 1.0);
       }`,
@@ -4426,15 +4518,69 @@ function bakeLightField() {
 let LF_CANVAS = null;
 const COVERS = []; // awnings and eaves keep the pavement below them dry
 
+/* ---------- the morning sun: 08:42, east-south-east and 30 degrees up ---------- */
+// The plan's north is +x and east is +z: the street runs east to west, so only a low eastern sun reaches
+// its floor past the south-side blocks, shining down it from behind most of the cameras.
+const SUN = { dir: new THREE.Vector3(-0.224, 0.5, 0.837).normalize() };
+
+// For each point of the plan, the height below which a block hides the sun (read by SUN_PARS). A block is a
+// prism: the ray toward the sun enters its footprint at t and is still under the roof there if y + sy * t < h.
+// Raised slabs (the viaduct deck, the arch) count only where their shadow reaches the ground.
+function bakeSunMap() {
+  const R = U.uSunRect.value, N = QUALITY.name === 'low' ? 1024 : 2048, d = SUN.dir;
+  const occ = MAP_BLOCKS.filter(b => b.h > 0 && !b.rail).map(b => [b.x0, b.z0, b.x1, b.z1, 0, b.h]);
+  occ.push([-420, VIADUCT.z0, 420, VIADUCT.z1, VIADUCT.deckBottom, VIADUCT.deckTop + 1.1], [-6.1, 37.9, 6.1, 38.5, 6.4, 7.95]);
+  const pos = [], box = [], ys = [], idx = [];
+  occ.forEach(([x0, z0, x1, z1, y0, y1], i) => {
+    const ex = -d.x / d.y * y1, ez = -d.z / d.y * y1;   // the farthest the roof edge throws its shadow
+    const qx0 = Math.min(x0, x0 + ex), qx1 = Math.max(x1, x1 + ex), qz0 = Math.min(z0, z0 + ez), qz1 = Math.max(z1, z1 + ez);
+    for (const [x, z] of [[qx0, qz0], [qx1, qz0], [qx1, qz1], [qx0, qz1]]) { pos.push(x, 0, z); box.push(x0, z0, x1, z1); ys.push(y0, y1); }
+    idx.push(i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3);
+  });
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('aBox', new THREE.Float32BufferAttribute(box, 4));
+  g.setAttribute('aY', new THREE.Float32BufferAttribute(ys, 2));
+  g.setIndex(idx);
+  const m = new THREE.Mesh(g, new THREE.ShaderMaterial({
+    uniforms: { uRect: { value: R }, uDir: { value: d } },
+    vertexShader: /* glsl */`
+      uniform vec4 uRect; attribute vec4 aBox; attribute vec2 aY; varying vec2 vP; varying vec4 vBox; varying vec2 vY;
+      void main(){ vP = position.xz; vBox = aBox; vY = aY; gl_Position = vec4((position.xz - uRect.xy) / uRect.zw * 2.0 - 1.0, 0.0, 1.0); }`,
+    fragmentShader: /* glsl */`
+      uniform vec3 uDir; varying vec2 vP; varying vec4 vBox; varying vec2 vY;
+      void main(){
+        vec2 t0 = (vBox.xy - vP) / uDir.xz, t1 = (vBox.zw - vP) / uDir.xz;
+        vec2 tn = min(t0, t1), tf = max(t0, t1);
+        float tin = max(max(tn.x, tn.y), 0.0), tout = min(tf.x, tf.y);
+        if (tout < tin || vY.x - uDir.y * tout > 0.2) discard;
+        gl_FragColor = vec4(vY.y - uDir.y * tin, 0.0, 0.0, 1.0);
+      }`,
+    blending: THREE.CustomBlending, blendEquation: THREE.MaxEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, depthTest: false, depthWrite: false,
+  }));
+  m.frustumCulled = false;
+  const rt = new THREE.WebGLRenderTarget(N, N, { type: THREE.HalfFloatType, format: THREE.RedFormat, depthBuffer: false });
+  renderer.setRenderTarget(rt); renderer.clear(); renderer.render(m, FSQ.cam); renderer.setRenderTarget(null);
+  g.dispose(); m.material.dispose();
+  U.uSunH.value = rt.texture; SUN.rt = rt;
+}
+
 /* ---------- real lights (a fixed set, so shaders never recompile) ---------- */
 const LIGHTS = {};
 function buildLights() {
   const hemi = new THREE.HemisphereLight(0x3d5793, 0x0e0c0a, 2.8);
   scene.add(hemi);
   LIGHTS.hemi = hemi;
+  // the moon, and by day the sun; it casts shadows in both so switching never recompiles a shader
   const moon = new THREE.DirectionalLight(0x8090c0, 0.12);
   moon.position.set(-40, 80, -60);
-  scene.add(moon);
+  moon.castShadow = true;
+  moon.shadow.mapSize.set(QUALITY.shadow * 2, QUALITY.shadow * 2);
+  moon.shadow.camera.near = 1; moon.shadow.camera.far = 400;
+  moon.shadow.bias = -0.0004; moon.shadow.normalBias = 0.03; moon.shadow.radius = 2;
+  moon.shadow.intensity = 0; moon.shadow.autoUpdate = false; moon.shadow.needsUpdate = true;
+  scene.add(moon, moon.target);
+  LIGHTS.sun = moon;
   // the sign above him: warm, from above, the only shadow caster
   const spot = new THREE.SpotLight(0xffb878, 34, 10, 0.95, 0.85, 2);
   spot.position.set(5.32, 3.62, 0.05);
@@ -4474,7 +4620,8 @@ function buildLights() {
 }
 
 /* ---------- environment capture from the street itself ---------- */
-function captureEnvironment(hidden = []) {
+const ENV_HIDDEN = [];
+function captureEnvironment(hidden = ENV_HIDDEN) {
   const pmrem = new THREE.PMREMGenerator(renderer);
   const rt = new THREE.WebGLCubeRenderTarget(256, { type: THREE.HalfFloatType, generateMipmaps: false });
   const cube = new THREE.CubeCamera(0.2, 1200, rt);
@@ -4487,8 +4634,91 @@ function captureEnvironment(hidden = []) {
   hidden.forEach(o => o.visible = true);
   const env = pmrem.fromCubemap(rt.texture).texture;
   scene.environment = env;
-  scene.environmentIntensity = 0.32;
   rt.dispose(); pmrem.dispose();
+  return env;
+}
+
+// ---- 47_day.js ----
+/* ============================================================
+   Day and night: the same street at 08:42 under a low morning sun
+   in a passing shower, or at 19:42 in the blue hour. One switch
+   moves the lights, the sky, the fog, the grade and everything
+   that glows; the shaders stay the same programs either way.
+   ============================================================ */
+
+const DAY = { on: false, env: {}, glow: 1 };
+const NIGHT_LOOK = { hemi: [0x3d5793, 0x0e0c0a, 2.8], sun: [0x8090c0, 0.12], fog: [0x0c111c, 0.0105] };
+const DAY_LOOK = { hemi: [0xb9d0ef, 0x5d5448, 1.1], sun: [0xffeacc, 5.2], fog: [0x9fb2c6, 0.0042] };
+// Point lights by day, as a share of their night strength: shops stay lit, street lamps go out.
+const LIGHT_DAY = { pilotis: 0.3, kissaten: 0.35, ramen: 0.35, conbini: 0.4, lampE: 0, lampW: 0, vending: 0.4, izakaya: 0.35, alley: 0.5, soba: 0.35, pharmacy: 0.4, laundry: 0.4, koban: 0.6, spot: 0.3 };
+
+// Unlit materials that glow at night, and how bright each stays in daylight.
+function glowTable() {
+  return [
+    [M.signs, 0.42], [M.signsHot, 0.38], [M.signsDim, 0.6], [M.interior, 0.5], [M.glow, 0.35], [M.lamp, 0.03], [M.vend, 0.6], [M.trainSide, 0.65],
+    [M.glowSingle, 0.4], [M.glowSingleW, 0.6], [M.glowSingleL, 0.02], [M.glowSingleC, 0.25], [M.backPool, 0],
+    [TRAFFIC.mats.head, 0.25], [TRAFFIC.mats.tail, 0.6], [TRAFFIC.mats.roof, 0.45], [TRAFFIC.mats.cabin, 0.6], [TRAFFIC.vacancy.material, 0.6],
+    [TRAFFIC.bikeLamp.material, 0.2], [TRAFFIC.pools.material, 0], [FX.lanterns.material, 0.35], [FX.drums.material, 0.7],
+  ].filter(([m]) => m);
+}
+
+function setDay(on) {
+  DAY.on = on;
+  const L = on ? DAY_LOOK : NIGHT_LOOK, sun = LIGHTS.sun;
+  U.uDay.value = on ? 1 : 0;
+  DAY.glow = on ? 0.45 : 1;
+  for (const [m, k] of DAY.glows || (DAY.glows = glowTable())) { m.userData.c0 = m.userData.c0 || m.color.clone(); m.color.copy(m.userData.c0).multiplyScalar(on ? k : 1); }
+  for (const id in LIGHT_DAY) { const l = LIGHTS[id]; if (!l) continue; l.userData.base = l.userData.base ?? l.intensity; l.intensity = l.userData.base * (on ? LIGHT_DAY[id] : 1); }
+  LIGHTS.hemi.color.set(L.hemi[0]); LIGHTS.hemi.groundColor.set(L.hemi[1]); LIGHTS.hemi.intensity = L.hemi[2];
+  sun.color.set(L.sun[0]); sun.intensity = L.sun[1]; sun.shadow.intensity = on ? 1 : 0;
+  if (!on) { sun.position.set(-40, 80, -60); sun.target.position.set(0, 0, 0); }
+  scene.fog.color.set(L.fog[0]); scene.fog.density = L.fog[1];
+  U.uFogColor.value.copy(scene.fog.color); U.uFogDensity.value = scene.fog.density;
+  U.uLFGain.value = on ? 0.12 : 1;
+  FX.halos.material.uniforms.uGain.value = on ? 0 : 1;
+  FX.sigHalo.material.uniforms.uGain.value = on ? 0.15 : 1;
+  FX.cone.material.uniforms.uK.value = on ? 0 : 0.05;
+  FX.rain.material.uniforms.uSky.value.set(...(on ? [0.42, 0.46, 0.52] : [0.006, 0.008, 0.013]));
+  FX.steam.material.uniforms.uAmb.value.set(...(on ? [0.3, 0.32, 0.35] : [0, 0, 0]));
+  // by day the sun falls on everything; at night only he takes shadows, from his sign
+  scene.traverse(o => { if (!o.isMesh || !o.material || !o.material.isMeshStandardMaterial) return; if (o.userData.rs0 === undefined) o.userData.rs0 = o.receiveShadow; o.receiveShadow = on || o.userData.rs0; });
+  const key = on ? 'day' : 'night';
+  scene.environment = DAY.env[key] || (DAY.env[key] = captureEnvironment());
+  scene.environmentIntensity = on ? 0.6 : 0.32;
+  UI.onDay && UI.onDay(on);
+}
+
+// Seconds since midnight for world time T: the same minute, by night or by day.
+const clockAt = T => (DAY.on ? 8 : 19) * 3600 + 42 * 60 + T;
+
+// The sun's shadow map holds what moves (people, cars, him) and the posts, in a square that follows the camera;
+// the blocks are already in the baked map. Snapped to its texels so edges hold still while the camera moves.
+const _sunView = new THREE.Matrix4().lookAt(SUN.dir, V3(), V3(0, 1, 0)), _sunInv = _sunView.clone().invert();
+function updateSun(cam) {
+  if (!DAY.on) return;
+  const sun = LIGHTS.sun, sc = sun.shadow.camera;
+  const R = Math.ceil(clamp(22 + cam.position.y * 0.8, 24, 140) / 8) * 8;
+  const f = _v1.set(0, 0, -1).applyQuaternion(cam.quaternion).setY(0);
+  if (f.lengthSq() < 1e-4) f.set(0, 0, -1);
+  const c = _v2.copy(cam.position).setY(0).addScaledVector(f.normalize(), R * 0.6).applyMatrix4(_sunInv);
+  const texel = 2 * R / sun.shadow.mapSize.x;
+  c.x = Math.round(c.x / texel) * texel; c.y = Math.round(c.y / texel) * texel;
+  c.applyMatrix4(_sunView);
+  if (sc.right !== R) { sc.left = -R; sc.right = R; sc.top = R; sc.bottom = -R; sc.updateProjectionMatrix(); }
+  sun.target.position.copy(c); sun.position.copy(c).addScaledVector(SUN.dir, 200);
+  sun.updateMatrixWorld(); sun.target.updateMatrixWorld();
+  sun.shadow.needsUpdate = true;
+}
+
+// Poles and lamp posts throw their thin shadows across the street by day. Boxes drawn only into the sun's map.
+function buildSunProxies() {
+  const b = new Batch(M.blackout);
+  for (const c of COLLIDERS) if (c.thin) b.add(G.box, boxM(c.min.x, c.min.y, c.min.z, c.max.x, c.max.y, c.max.z));
+  const m = b.build();
+  m.castShadow = true; m.geometry.drawRange.count = 0;
+  m.onBeforeShadow = (r, o, cam, sc) => { if (sc === LIGHTS.sun.shadow.camera) o.geometry.drawRange.count = Infinity; };
+  m.onAfterShadow = (r, o) => { o.geometry.drawRange.count = 0; };
+  scene.add(m);
 }
 
 // ---- 50_people.js ----
@@ -6171,12 +6401,12 @@ function buildRain() {
   const m = new THREE.ShaderMaterial({
     uniforms: {
       uTime: U.uTime, uCam: { value: new THREE.Vector3() }, uBox: { value: new THREE.Vector3(36, 18, 36) },
-      uLen: { value: 0.12 }, uWidth: { value: 0.0028 }, uAmt: { value: 1 }, uLF: U.uLF, uLFRect: U.uLFRect,
+      uLen: { value: 0.12 }, uWidth: { value: 0.0028 }, uAmt: { value: 1 }, uLF: U.uLF, uLFRect: U.uLFRect, uSky: { value: new THREE.Vector3(0.006, 0.008, 0.013) },
       uL: { value: Array.from({ length: 6 }, () => new THREE.Vector4()) }, uLC: { value: Array.from({ length: 6 }, () => new THREE.Vector3()) },
       uFogColor: U.uFogColor, uFogDensity: U.uFogDensity,
     },
     vertexShader: /* glsl */`
-      uniform float uTime, uLen, uWidth; uniform vec3 uCam, uBox; uniform sampler2D uLF; uniform vec4 uLFRect;
+      uniform float uTime, uLen, uWidth; uniform vec3 uCam, uBox, uSky; uniform sampler2D uLF; uniform vec4 uLFRect;
       uniform vec4 uL[6]; uniform vec3 uLC[6];
       attribute vec4 aSeed;
       varying float vA; varying vec3 vC; varying vec2 vUv;
@@ -6195,7 +6425,7 @@ function buildRain() {
         vec2 uv = (p.xz - uLFRect.xy) / uLFRect.zw;
         vec4 lf = (uv.x > 0.0 && uv.x < 1.0 && uv.y > 0.0 && uv.y < 1.0) ? texture2D(uLF, uv) : vec4(0.0, 0.0, 0.0, 1.0);
         float sky = step(0.5, lf.a);
-        vec3 light = lf.rgb * lf.rgb * 1.0 * exp(-max(p.y, 0.0) * 0.18) + vec3(0.006, 0.008, 0.013);
+        vec3 light = lf.rgb * lf.rgb * 1.0 * exp(-max(p.y, 0.0) * 0.18) + uSky;
         for (int i = 0; i < 6; i++) { vec3 d = p - uL[i].xyz; light += uLC[i] * uL[i].w * 0.8 / (1.0 + dot(d, d) * 2.5); }
         float dist = length(uCam - p);
         vA = sky * smoothstep(1.2, 3.2, dist) * (1.0 - smoothstep(7.0, 12.0, dist)) * step(0.02, p.y);
@@ -6326,7 +6556,7 @@ function buildSteam() {
   g.setAttribute('aD', new THREE.InstancedBufferAttribute(D, 4));
   g.instanceCount = n;
   const m = new THREE.ShaderMaterial({
-    uniforms: { uTime: U.uTime, tPuff: { value: TEX.puff }, uFogColor: U.uFogColor, uFogDensity: U.uFogDensity },
+    uniforms: { uTime: U.uTime, tPuff: { value: TEX.puff }, uFogColor: U.uFogColor, uFogDensity: U.uFogDensity, uAmb: { value: new THREE.Vector3() } },
     vertexShader: /* glsl */`
       uniform float uTime; attribute vec4 aA, aB, aC, aD;
       varying vec2 vUv; varying float vA; varying vec3 vC; varying float vRot; varying vec3 vW;
@@ -6354,14 +6584,14 @@ function buildSteam() {
         gl_Position = projectionMatrix * viewMatrix * vec4(pos, 1.0);
       }`,
     fragmentShader: /* glsl */`
-      uniform sampler2D tPuff; uniform vec3 uFogColor; uniform float uFogDensity;
+      uniform sampler2D tPuff; uniform vec3 uFogColor, uAmb; uniform float uFogDensity;
       varying vec2 vUv; varying float vA; varying vec3 vC; varying vec3 vW;
       ${FOG_FN}
       void main(){
         float a = texture2D(tPuff, vUv).a * vA;
         if (a < 0.003) discard;
         float f = hFogAmount(vW, cameraPosition, uFogDensity);
-        vec3 c = mix(vC, hFogColor(uFogColor, vW), f);
+        vec3 c = mix(vC + uAmb, hFogColor(uFogColor, vW), f);
         gl_FragColor = vec4(c * a, a);
       }`,
     transparent: true, depthWrite: false, blending: THREE.CustomBlending,
@@ -6565,13 +6795,13 @@ function updateSmallFX(T) {
   if (FX.tube) {
     const h = hash1(Math.floor(T * 14)), h2 = hash1(Math.floor(T * 0.7));
     const on = h2 < 0.7 ? 1 : (h < 0.5 ? 0.15 : 1);
-    FX.tube.material.color.setRGB(6 * on, 6.5 * on, 7 * on);
+    FX.tube.material.color.setRGB(6, 6.5, 7).multiplyScalar(on * DAY.glow);
   }
   // his sign's neon stutters for a moment every 17 seconds
   const c = fract(T / 17) * 17;
   let neon = 1;
   if (c > 11.0 && c < 11.6) neon = (hash1(Math.floor(T * 24)) < 0.55) ? 0.08 : 0.9;
-  M.neon.color.setScalar(neon);
+  M.neon.color.setScalar(neon * DAY.glow);
   if (FX.heroHalo >= 0) { FX.halos.setColorAt(FX.heroHalo, _c1.setRGB(0.07, 0.056, 0.042).multiplyScalar(0.55 + 0.45 * neon)); FX.halos.instanceColor.needsUpdate = true; }
   for (const i of FX.blinkers) FX.halos.setColorAt(i, fract(T * 0.55 + i * 0.37) < 0.18 ? _c1.setRGB(0.9, 0.05, 0.03) : _c1.setRGB(0.02, 0.0, 0.0));
   if (FX.blinkers.length) FX.halos.instanceColor.needsUpdate = true;
@@ -6599,12 +6829,192 @@ function pass(fs, uniforms, defines = {}) { return new THREE.ShaderMaterial({ ve
 const SAN = /* glsl */`
 vec3 san(vec3 c){ if (any(isnan(c)) || any(isinf(c))) return vec3(0.0); return min(c, vec3(48.0)); }
 `;
+// uTilt swaps the lens for a tilt-shift band: sharp across the frame just below centre, soft above and below.
 const DOF_COMMON = SAN + /* glsl */`
 #include <packing>
-uniform float uNear, uFar, uFocus, uFocal, uAperture, uPxPerM, uMaxCoc;
+uniform float uNear, uFar, uFocus, uFocal, uAperture, uPxPerM, uMaxCoc, uTilt;
 float linZ(float d){ return -perspectiveDepthToViewZ(d, uNear, uFar); }
-float cocPx(float z){ return uAperture * uFocal * (z - uFocus) / (max(z, 1e-3) * max(uFocus - uFocal, 1e-3)) * uPxPerM; }
+float cocPx(float z, vec2 uv){
+  float lens = uAperture * uFocal * (z - uFocus) / (max(z, 1e-3) * max(uFocus - uFocal, 1e-3)) * uPxPerM;
+  float y = uv.y - 0.42;
+  return mix(lens, sign(y) * max(abs(y) - 0.09, 0.0) * 3.0 * uMaxCoc, uTilt);
+}
 `;
+
+// Looks laid over the graded picture. P holds the grade each one wants from the main pass.
+const FILTERS = [
+  { id: 'cinema', name: 'Cinema', jp: '映画' },
+  { id: 'noir', name: 'Noir', jp: 'ノワール', P: { bloom: 0.13, halation: 0, grain: 0.045, vignette: 0.62, ca: 0.0005 } },
+  { id: 'vintage', name: 'Vintage', jp: '昭和フィルム', P: { bloom: 0.1, halation: 0.05, grain: 0.03, vignette: 0.7 } },
+  { id: 'vhs', name: 'VHS', jp: 'ビデオ', P: { bloom: 0.1, grain: 0, ca: 0.003, vignette: 0.3, sat: 1.18 } },
+  { id: 'pixel', name: '8-bit', jp: 'ドット絵', P: { grain: 0, ca: 0, vignette: 0, mb: 0, dof: false, exposure: 1.3 } },
+  { id: 'anime', name: 'Anime', jp: 'アニメ', P: { grain: 0, ca: 0, vignette: 0.12, bloom: 0.12, halation: 0.01, exposure: 1.12, dof: false } },
+  { id: 'thermal', name: 'Thermal', jp: 'サーモ', rain: 0, P: { grain: 0, mb: 0, dof: false } },
+  { id: 'night', name: 'Night Vision', jp: '暗視', P: { grain: 0, mb: 0, dof: false } },
+  { id: 'tilt', name: 'Tilt-Shift', jp: 'ミニチュア', P: { tilt: 1, grain: 0.01, vignette: 0.2, exposure: 1.15 } },
+];
+const FILTER_FS = /* glsl */`
+#include <packing>
+uniform sampler2D tLDR, tHDR, tBloom, tDepth, tHeat, tHeatDepth;
+uniform vec2 uRes; uniform float uTime, uNear, uFar, uFade, uExposure, uDay;
+uniform int uMode;
+varying vec2 vUv;
+float hsh(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+float luma(vec3 c){ return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
+float linZ(float d){ return -perspectiveDepthToViewZ(d, uNear, uFar); }
+vec3 ldr(vec2 uv){ return texture2D(tLDR, uv).rgb; }
+const vec3 PAL[16] = vec3[16](vec3(0.0), vec3(0.114, 0.169, 0.325), vec3(0.494, 0.145, 0.325), vec3(0.0, 0.529, 0.318), vec3(0.671, 0.322, 0.212), vec3(0.373, 0.341, 0.31),
+  vec3(0.761, 0.765, 0.78), vec3(1.0, 0.945, 0.91), vec3(1.0, 0.0, 0.302), vec3(1.0, 0.639, 0.0), vec3(1.0, 0.925, 0.153), vec3(0.0, 0.894, 0.212), vec3(0.161, 0.678, 1.0), vec3(0.514, 0.463, 0.612), vec3(1.0, 0.467, 0.659), vec3(1.0, 0.8, 0.667));
+float bayer2(vec2 a){ a = floor(a); return fract(a.x / 2.0 + a.y * a.y * 0.75); }
+float bayer4(vec2 a){ return bayer2(0.5 * a) * 0.25 + bayer2(a); }
+vec3 iron(float t){
+  vec3 c = mix(vec3(0.0, 0.0, 0.05), vec3(0.17, 0.02, 0.42), smoothstep(0.0, 0.2, t));
+  c = mix(c, vec3(0.6, 0.06, 0.55), smoothstep(0.2, 0.4, t));
+  c = mix(c, vec3(0.92, 0.25, 0.1), smoothstep(0.4, 0.6, t));
+  c = mix(c, vec3(1.0, 0.64, 0.06), smoothstep(0.6, 0.78, t));
+  c = mix(c, vec3(1.0, 0.94, 0.45), smoothstep(0.78, 0.93, t));
+  return mix(c, vec3(1.0), smoothstep(0.93, 1.05, t));
+}
+void main(){
+  vec2 uv = vUv, px = 1.0 / uRes;
+  float asp = uRes.x / uRes.y;
+  vec2 cc = (uv - 0.5) * vec2(asp, 1.0);
+  vec3 col;
+  if (uMode == 1) {
+    // noir: a yellow lens filter darkens the sky, then a hard print curve
+    float l = smoothstep(0.01, 0.92, pow(dot(ldr(uv), vec3(0.4, 0.5, 0.1)), 0.8));
+    col = vec3(mix(l, l * l * (3.0 - 2.0 * l), 0.45)) * vec3(1.0, 0.985, 0.955);
+  } else if (uMode == 2) {
+    // sepia print projected at 18 frames a second: gate weave, flicker, scratches, dust
+    float fr = floor(uTime * 18.0);
+    vec2 q = uv + (vec2(hsh(vec2(fr, 1.0)), hsh(vec2(fr, 2.0))) - 0.5) * vec2(0.0015, 0.003);
+    vec3 c = ldr(q) * 0.5 + (ldr(q + vec2(px.x, 0.0)) + ldr(q - vec2(px.x, 0.0))) * 0.25;
+    float l = luma(c) * (0.93 + 0.07 * hsh(vec2(fr, 3.0)));
+    col = mix(vec3(0.09, 0.055, 0.03), vec3(1.0, 0.84, 0.6), smoothstep(0.0, 0.85, l));
+    col = mix(col, vec3(1.0, 0.95, 0.84), smoothstep(0.7, 1.0, l) * 0.6) * 0.9 + 0.045;
+    for (int i = 0; i < 3; i++) {
+      float fi = float(i), sx = hsh(vec2(fr, 10.0 + fi)), on = step(0.6, hsh(vec2(floor(uTime * 3.0), 20.0 + fi)));
+      float d = abs(uv.x - sx - sin(uv.y * 3.0 + fi) * 0.004) * uRes.x;
+      col = mix(col, vec3(0.96, 0.9, 0.78), on * (1.0 - smoothstep(0.3, 1.4, d)) * (0.35 + 0.35 * hsh(vec2(floor(uv.y * 40.0), fr))));
+    }
+    vec2 dg = uv * vec2(asp, 1.0) * 70.0;
+    if (hsh(floor(dg) + fr * 7.31) > 0.9975) col *= mix(1.0, 0.2, smoothstep(0.45, 0.15, length(fract(dg) - 0.5)));
+  } else if (uMode == 3) {
+    // VHS: 240 lines of tape, a tracking band, head-switching noise, smeared and late chroma
+    float line = floor(uv.y * 240.0), f = floor(uTime * 30.0);
+    float band = fract(uTime * 0.045 + 0.3), inBand = 1.0 - smoothstep(0.0, 0.025, abs(uv.y - band));
+    float bottom = 1.0 - smoothstep(0.0, 0.03, uv.y);
+    vec2 q = uv;
+    q.x += (hsh(vec2(line, f)) - 0.5) * 0.0011 + inBand * (hsh(vec2(line, f + 1.0)) - 0.5) * 0.012 + bottom * (0.02 + 0.02 * hsh(vec2(line, f)));
+    float Y = luma(ldr(q)) * 0.5 + luma(ldr(q - vec2(px.x * 2.0, 0.0)) + ldr(q + vec2(px.x * 2.0, 0.0))) * 0.25;
+    vec3 cs = vec3(0.0);
+    for (int i = 0; i < 6; i++) cs += ldr(q - vec2(px.x * (3.0 + float(i) * 2.5), 0.0));
+    cs /= 6.0;
+    float I = dot(cs, vec3(0.596, -0.274, -0.322)) * 1.15, Qc = dot(cs, vec3(0.211, -0.523, 0.312)) * 1.15;
+    col = vec3(Y + 0.956 * I + 0.621 * Qc, Y - 0.272 * I - 0.647 * Qc, Y - 1.106 * I + 1.703 * Qc);
+    float x0 = hsh(vec2(line, f * 1.7)), len = 0.01 + 0.06 * hsh(vec2(f, line));
+    float drop = step(hsh(vec2(line * 0.37, f)), 0.006 + inBand * 0.25 + bottom * 0.3) * step(x0, uv.x) * (1.0 - smoothstep(x0, x0 + len, uv.x));
+    col = mix(col, vec3(0.92), drop * 0.75);
+    col *= 0.92 + 0.08 * sin(uv.y * uRes.y * 3.14159);
+    col = col * 0.88 + vec3(0.045, 0.035, 0.055);
+  } else if (uMode == 4) {
+    // 8-bit: square pixels about 160 to the frame height, the sixteen PICO-8 colours, a light ordered dither
+    float ps = max(2.0, floor(uRes.y / 160.0 + 0.5));
+    vec2 cell = floor(gl_FragCoord.xy / ps), c0 = (cell + 0.5) * ps * px, o = ps * 0.25 * px;
+    vec3 c = (ldr(c0 + vec2(-o.x, -o.y)) + ldr(c0 + vec2(o.x, -o.y)) + ldr(c0 + vec2(-o.x, o.y)) + ldr(c0 + o)) * 0.25;
+    c = pow(c, vec3(0.8)) * 1.08 + (bayer4(cell) - 0.47) * 0.13;
+    float best = 1e9;
+    for (int i = 0; i < 16; i++) { vec3 e = PAL[i] - c; float d = dot(e * e, vec3(0.3, 0.55, 0.15)); if (d < best) { best = d; col = PAL[i]; } }
+  } else if (uMode == 5) {
+    // anime: cel bands that keep the hue, ink where depth or tone breaks
+    vec3 c = ldr(uv);
+    float d = linZ(texture2D(tDepth, uv).x);
+    float dl = linZ(texture2D(tDepth, uv - vec2(px.x, 0.0)).x), dr = linZ(texture2D(tDepth, uv + vec2(px.x, 0.0)).x);
+    float dd = linZ(texture2D(tDepth, uv - vec2(0.0, px.y)).x), du = linZ(texture2D(tDepth, uv + vec2(0.0, px.y)).x);
+    float edge = (abs(dl + dr - 2.0 * d) + abs(du + dd - 2.0 * d)) / max(d, 0.3);
+    float ink = smoothstep(0.03, 0.09, edge) * (1.0 - smoothstep(40.0, 120.0, d));
+    float le = abs(luma(ldr(uv - vec2(px.x, 0.0))) - luma(ldr(uv + vec2(px.x, 0.0)))) + abs(luma(ldr(uv - vec2(0.0, px.y))) - luma(ldr(uv + vec2(0.0, px.y))));
+    ink = max(ink, smoothstep(0.22, 0.45, le) * 0.55);
+    float l = luma(c), q = l * 4.0;
+    float lb = (floor(q) + smoothstep(0.3, 0.7, fract(q))) / 4.0;
+    vec3 cel = c / max(l, 0.02) * max(lb, l * 0.35);
+    cel = max(mix(vec3(luma(cel)), cel, 1.35), 0.0);
+    col = cel * (1.0 - ink * 0.85) + vec3(0.01, 0.012, 0.03);
+  } else if (uMode == 6) {
+    // thermal: a 300-row sensor; bodies and engines from the heat pass, the rest from light and distance
+    vec2 grid = vec2(floor(300.0 * asp), 300.0);
+    vec2 q = (floor(uv * grid) + 0.5) / grid;
+    float d = texture2D(tDepth, q).x, z = linZ(d);
+    float L = luma(texture2D(tHDR, q).rgb);
+    float t = 0.17 + 0.3 * (1.0 - 0.55 * uDay) * sqrt(min(L, 6.0)) - 0.08 * smoothstep(15.0, 250.0, z) + (luma(ldr(q)) - 0.12) * 0.12;
+    t = mix(t, 0.04 + 0.05 * (1.0 - uv.y), step(1500.0, z));
+    float hd = texture2D(tHeatDepth, q).x, hz = linZ(hd);
+    float hv = step(hd, 0.999999) * step(hz, z * 1.004 + 0.04);
+    t = mix(t, max(t, texture2D(tHeat, q).r), hv);
+    t += (hsh(floor(uv * grid) + floor(uTime * 9.0) * 3.1) - 0.5) * 0.035;
+    col = iron(t) * (1.0 - uFade);
+  } else if (uMode == 7) {
+    // night vision: amplified scene light on a green phosphor, photon noise, two tubes
+    vec3 h = texture2D(tHDR, uv).rgb + texture2D(tBloom, uv).rgb / 6.0 * 0.5;
+    float L = 1.0 - exp(-luma(h) * 15.0 * uExposure * (1.0 - 0.94 * uDay));
+    L = pow(L, 0.85);
+    L += (hsh(uv * uRes + fract(uTime * 30.0) * 91.0) - 0.5) * (0.12 + 0.18 * sqrt(L));
+    L *= 0.93 + 0.07 * sin(uv.y * uRes.y * 1.6);
+    col = vec3(0.25, 1.0, 0.34) * L + vec3(0.6, 0.3, 0.5) * L * L * L * 0.35;
+    float tube = max(smoothstep(0.64, 0.6, length(cc - vec2(0.36, 0.0))), smoothstep(0.64, 0.6, length(cc + vec2(0.36, 0.0))));
+    col *= tube * (1.0 - uFade);
+  } else if (uMode == 8) {
+    // tilt-shift: the band comes from the depth of field pass; here, toy-like colour
+    vec3 c = ldr(uv);
+    c = mix(vec3(luma(c)), c, 1.45);
+    col = mix(c, c * c * (3.0 - 2.0 * c), 0.5) * 1.04;
+  } else col = ldr(uv);
+  gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
+}`;
+const FILTER_ID = Object.fromEntries(FILTERS.map((f, i) => [f.id, i]));
+const POST = { filter: 0 };
+
+// Warm bodies for the thermal look: everything tagged here is drawn once more with its temperature (0..1).
+const LAYER_HEAT = 2;
+const HEAT = [];
+function tagHeat(obj, k) {
+  obj.traverse(o => {
+    const h = typeof k === 'function' ? k(o) : k;
+    if (!o.isMesh || !h || o.userData.heat != null) return;
+    o.userData.heat = h; o.layers.enable(LAYER_HEAT); HEAT.push(o);
+  });
+}
+// Skin is warmest, then clothes over a body, engines and tyres. Umbrellas and bags stay cold and hide what is behind them.
+function tagWarmBodies() {
+  const crowd = { head: 1, neck: 1, hand: 1, hair: 0.8, hairLong: 0.8, cap: 0.74, torso: 0.74, pelvis: 0.72, uarm: 0.72, farm: 0.74, thigh: 0.7, shin: 0.66, skirt: 0.66, foot: 0.55 };
+  for (const k in crowd) tagHeat(CROWD.meshes[k], crowd[k]);
+  const hm = HEROM.mat, hero = new Map([[hm.skin, 1], [hm.face, 1], [hm.hair, 0.8], [hm.knit, 0.76], [hm.coat, 0.68], [hm.trousers, 0.66], [hm.shoe, 0.5]]);
+  tagHeat(HEROM.root, o => hero.get(o.material));
+  tagHeat(COMP.dog.g, 0.86); tagHeat(COMP.cat.g, 0.84);
+  const car = { body: 0.4, trim: 0.52, head: 0.8, tail: 0.6, stripe: 0.4 };
+  for (const t in TRAFFIC.meshes) for (const p in car) if (TRAFFIC.meshes[t][p]) tagHeat(TRAFFIC.meshes[t][p], car[p]);
+  tagHeat(TRAFFIC.wheels, 0.62); tagHeat(TRAFFIC.hubs, 0.58);
+}
+const HEAT_MATS = new Map();
+function heatMaterial(k) {
+  if (!HEAT_MATS.has(k)) HEAT_MATS.set(k, new THREE.ShaderMaterial({
+    uniforms: { uHeat: { value: k } },
+    vertexShader: /* glsl */`
+      varying float vF;
+      void main(){
+        vec4 p = vec4(position, 1.0); vec3 n = normal;
+        #ifdef USE_INSTANCING
+          p = instanceMatrix * p; n = mat3(instanceMatrix) * n;
+        #endif
+        vec4 mv = modelViewMatrix * p;
+        vF = abs(dot(normalize(normalMatrix * n), normalize(-mv.xyz)));
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: 'uniform float uHeat; varying float vF; void main(){ gl_FragColor = vec4(uHeat * (0.74 + 0.26 * vF), 0.0, 0.0, 1.0); }',
+    side: THREE.DoubleSide,
+  }));
+  return HEAT_MATS.get(k);
+}
 
 class Pipeline {
   constructor() {
@@ -6622,14 +7032,14 @@ class Pipeline {
         vec2 o = uTexel * 0.5;
         vec2 uv0 = vUv + vec2(-o.x, -o.y), uv1 = vUv + vec2(o.x, -o.y), uv2 = vUv + vec2(-o.x, o.y), uv3 = vUv + vec2(o.x, o.y);
         vec3 c0 = san(texture2D(tColor, uv0).rgb), c1 = san(texture2D(tColor, uv1).rgb), c2 = san(texture2D(tColor, uv2).rgb), c3 = san(texture2D(tColor, uv3).rgb);
-        float k0 = cocPx(linZ(texture2D(tDepth, uv0).x)), k1 = cocPx(linZ(texture2D(tDepth, uv1).x)), k2 = cocPx(linZ(texture2D(tDepth, uv2).x)), k3 = cocPx(linZ(texture2D(tDepth, uv3).x));
+        float k0 = cocPx(linZ(texture2D(tDepth, uv0).x), uv0), k1 = cocPx(linZ(texture2D(tDepth, uv1).x), uv1), k2 = cocPx(linZ(texture2D(tDepth, uv2).x), uv2), k3 = cocPx(linZ(texture2D(tDepth, uv3).x), uv3);
         float w0 = 1.0 / (1.0 + dot(c0, vec3(0.3))), w1 = 1.0 / (1.0 + dot(c1, vec3(0.3))), w2 = 1.0 / (1.0 + dot(c2, vec3(0.3))), w3 = 1.0 / (1.0 + dot(c3, vec3(0.3)));
         vec3 col = (c0 * w0 + c1 * w1 + c2 * w2 + c3 * w3) / (w0 + w1 + w2 + w3);
         float coc = (k0 + k1 + k2 + k3) * 0.25;
         float kmin = min(min(k0, k1), min(k2, k3));
         coc = mix(coc, kmin, 0.5 * step(kmin, -1.0));
         gl_FragColor = vec4(col, clamp(coc, -uMaxCoc, uMaxCoc));
-      }`, { tColor: { value: null }, tDepth: { value: null }, uTexel: { value: new THREE.Vector2() }, uNear: { value: 0.1 }, uFar: { value: 1000 }, uFocus: { value: 5 }, uFocal: { value: 0.035 }, uAperture: { value: 0.01 }, uPxPerM: { value: 1000 }, uMaxCoc: { value: 10 } });
+      }`, { tColor: { value: null }, tDepth: { value: null }, uTexel: { value: new THREE.Vector2() }, uNear: { value: 0.1 }, uFar: { value: 1000 }, uFocus: { value: 5 }, uFocal: { value: 0.035 }, uAperture: { value: 0.01 }, uPxPerM: { value: 1000 }, uMaxCoc: { value: 10 }, uTilt: { value: 0 } });
     M_.bokeh = pass(/* glsl */`
       uniform sampler2D tPre; uniform vec2 uTexel; uniform float uMaxCoc; varying vec2 vUv;
       const float GA = 2.39996323;
@@ -6658,11 +7068,11 @@ class Pipeline {
       uniform sampler2D tColor, tDepth, tBokeh; uniform float uHalf; varying vec2 vUv;
       void main(){
         vec3 sharp = san(texture2D(tColor, vUv).rgb);
-        float c = abs(cocPx(linZ(texture2D(tDepth, vUv).x)));
+        float c = abs(cocPx(linZ(texture2D(tDepth, vUv).x), vUv));
         vec4 b = texture2D(tBokeh, vUv);
         float blend = smoothstep(0.55, 1.5, max(c, b.a));
         gl_FragColor = vec4(mix(sharp, b.rgb, blend), 1.0);
-      }`, { tColor: { value: null }, tDepth: { value: null }, tBokeh: { value: null }, uHalf: { value: 0.5 }, uNear: { value: 0.1 }, uFar: { value: 1000 }, uFocus: { value: 5 }, uFocal: { value: 0.035 }, uAperture: { value: 0.01 }, uPxPerM: { value: 1000 }, uMaxCoc: { value: 10 } });
+      }`, { tColor: { value: null }, tDepth: { value: null }, tBokeh: { value: null }, uHalf: { value: 0.5 }, uNear: { value: 0.1 }, uFar: { value: 1000 }, uFocus: { value: 5 }, uFocal: { value: 0.035 }, uAperture: { value: 0.01 }, uPxPerM: { value: 1000 }, uMaxCoc: { value: 10 }, uTilt: { value: 0 } });
     M_.copy = pass(SAN + 'uniform sampler2D tColor; varying vec2 vUv; void main(){ gl_FragColor = vec4(san(texture2D(tColor, vUv).rgb), 1.0); }', { tColor: { value: null } });
     M_.down = pass(/* glsl */`
       uniform sampler2D tSrc; uniform vec2 uTexel; uniform float uFirst; varying vec2 vUv;
@@ -6688,7 +7098,7 @@ class Pipeline {
       uniform sampler2D tColor, tBloom, tDepth, tDrops;
       uniform mat4 uPrevVP, uInvVP;
       uniform vec2 uRes; uniform float uTime, uExposure, uBloom, uHalation, uVignette, uGrain, uCA, uDistort, uMB, uSat;
-      uniform float uCCTV, uGlitch, uWipe, uWipeDir, uFade, uDrops, uLift;
+      uniform float uCCTV, uGlitch, uWipe, uWipeDir, uFade, uDrops, uLift, uSplit;
       varying vec2 vUv;
       float hsh(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
       const mat3 ACESIn = mat3(vec3(0.59719, 0.07600, 0.02840), vec3(0.35458, 0.90834, 0.13383), vec3(0.04823, 0.01566, 0.83777));
@@ -6743,8 +7153,8 @@ class Pipeline {
         col *= uExposure;
         col = aces(col);
         float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
-        col = mix(col, col * vec3(0.9, 1.0, 1.08), (1.0 - smoothstep(0.0, 0.32, lum)) * 0.55);
-        col = mix(col, col * vec3(1.05, 1.0, 0.92), smoothstep(0.4, 1.0, lum) * 0.45);
+        col = mix(col, col * vec3(0.9, 1.0, 1.08), (1.0 - smoothstep(0.0, 0.32, lum)) * 0.55 * uSplit);
+        col = mix(col, col * vec3(1.05, 1.0, 0.92), smoothstep(0.4, 1.0, lum) * 0.45 * uSplit);
         col = mix(vec3(lum), col, uSat);
         col += uLift * vec3(0.006, 0.008, 0.012);
         if (uCCTV > 0.0) {
@@ -6770,7 +7180,11 @@ class Pipeline {
       uPrevVP: { value: new THREE.Matrix4() }, uInvVP: { value: new THREE.Matrix4() },
       uRes: { value: new THREE.Vector2(1, 1) }, uTime: { value: 0 }, uExposure: { value: 1 }, uBloom: { value: 0.045 }, uHalation: { value: 0.03 },
       uVignette: { value: 0.35 }, uGrain: { value: 0.035 }, uCA: { value: 0.004 }, uDistort: { value: 0 }, uMB: { value: 1 }, uSat: { value: 1.04 },
-      uCCTV: { value: 0 }, uGlitch: { value: 0 }, uWipe: { value: 0 }, uWipeDir: { value: 1 }, uFade: { value: 0 }, uDrops: { value: 0 }, uLift: { value: 1 },
+      uCCTV: { value: 0 }, uGlitch: { value: 0 }, uWipe: { value: 0 }, uWipeDir: { value: 1 }, uFade: { value: 0 }, uDrops: { value: 0 }, uLift: { value: 1 }, uSplit: { value: 1 },
+    });
+    M_.filter = pass(FILTER_FS, {
+      tLDR: { value: null }, tHDR: { value: null }, tBloom: { value: null }, tDepth: { value: null }, tHeat: { value: null }, tHeatDepth: { value: null },
+      uRes: { value: new THREE.Vector2(1, 1) }, uTime: { value: 0 }, uNear: { value: 0.1 }, uFar: { value: 1000 }, uFade: { value: 0 }, uExposure: { value: 1 }, uMode: { value: 0 }, uDay: U.uDay,
     });
     this.bloomLevels = 6;
   }
@@ -6779,7 +7193,7 @@ class Pipeline {
     w = Math.max(2, Math.floor(w)); h = Math.max(2, Math.floor(h));
     if (w === this.w && h === this.h && this.sceneRT) return;
     this.w = w; this.h = h;
-    [this.sceneRT, this.reflRT, this.preRT, this.bokehRT, this.fullRT, ...(this.bloom || [])].forEach(t => t && t.dispose());
+    [this.sceneRT, this.reflRT, this.preRT, this.bokehRT, this.fullRT, this.ldrRT, this.heatRT, ...(this.bloom || [])].forEach(t => t && t.dispose());
     const depthTex = new THREE.DepthTexture(w, h, THREE.UnsignedIntType);
     this.sceneRT = this.rt(w, h, { depthBuffer: true, depthTexture: depthTex, samples: QUALITY.msaa });
     const rw = Math.max(2, Math.floor(w * QUALITY.refl)), rh = Math.max(2, Math.floor(h * QUALITY.refl));
@@ -6787,6 +7201,8 @@ class Pipeline {
     const hw = Math.max(2, w >> 1), hh = Math.max(2, h >> 1);
     this.preRT = this.rt(hw, hh); this.bokehRT = this.rt(hw, hh);
     this.fullRT = this.rt(w, h);
+    this.ldrRT = this.rt(w, h, { type: THREE.UnsignedByteType });
+    this.heatRT = this.rt(hw, hh, { type: THREE.UnsignedByteType, depthBuffer: true, depthTexture: new THREE.DepthTexture(hw, hh, THREE.UnsignedIntType) });
     this.bloom = [];
     let bw = hw, bh = hh;
     for (let i = 0; i < this.bloomLevels; i++) { this.bloom.push(this.rt(Math.max(2, bw), Math.max(2, bh))); bw >>= 1; bh >>= 1; }
@@ -6831,6 +7247,18 @@ class Pipeline {
     renderer.render(scene, rc);
   }
 
+  // Tagged bodies only, each in a flat material holding its temperature; the filter tests them against the scene depth.
+  renderHeat(cam) {
+    const mask = cam.layers.mask, auto = renderer.shadowMap.autoUpdate;
+    cam.layers.set(LAYER_HEAT); renderer.shadowMap.autoUpdate = false;
+    for (const o of HEAT) { o.userData.mat = o.material; o.material = heatMaterial(o.userData.heat); }
+    renderer.setRenderTarget(this.heatRT);
+    renderer.clear();
+    renderer.render(scene, cam);
+    for (const o of HEAT) o.material = o.userData.mat;
+    cam.layers.mask = mask; renderer.shadowMap.autoUpdate = auto;
+  }
+
   render(cam, P) {
     const M_ = this.mats;
     renderer.info.reset();
@@ -6839,6 +7267,7 @@ class Pipeline {
       cam.updateMatrixWorld();
       if (P.refl && QUALITY.refl > 0) this.renderReflection(cam, P.reflPlane || 0);
       else U.uReflOn.value = 0;
+      updateSun(cam);
       renderer.setRenderTarget(this.sceneRT);
       renderer.clear();
       renderer.render(scene, cam);
@@ -6852,8 +7281,8 @@ class Pipeline {
       const cocInf = A * f / Math.max(S - f, 1e-3) * pxPerM;
       const zn = cam.near * 4;
       const cocNear = Math.abs(A * f * (zn - S) / (zn * Math.max(S - f, 1e-3))) * pxPerM;
-      const dofOn = (cocInf > 0.5 || cocNear > 0.8) && P.dof !== false;
-      const setU = (u) => { u.uNear.value = cam.near; u.uFar.value = cam.far; u.uFocus.value = S; u.uFocal.value = f; u.uAperture.value = A; u.uPxPerM.value = pxPerM; u.uMaxCoc.value = maxCoc; };
+      const dofOn = ((cocInf > 0.5 || cocNear > 0.8) && P.dof !== false) || P.tilt > 0;
+      const setU = (u) => { u.uNear.value = cam.near; u.uFar.value = cam.far; u.uFocus.value = S; u.uFocal.value = f; u.uAperture.value = A; u.uPxPerM.value = pxPerM; u.uMaxCoc.value = maxCoc; u.uTilt.value = P.tilt || 0; };
       if (dofOn) {
         setU(M_.pre.uniforms);
         M_.pre.uniforms.tColor.value = this.sceneRT.texture; M_.pre.uniforms.tDepth.value = this.sceneRT.depthTexture;
@@ -6897,7 +7326,18 @@ class Pipeline {
     F.uVignette.value = P.vignette; F.uGrain.value = P.grain; F.uCA.value = P.ca; F.uDistort.value = P.distort;
     F.uMB.value = hold ? 0 : P.mb; F.uSat.value = P.sat; F.uCCTV.value = P.cctv; F.uGlitch.value = P.glitch;
     F.uWipe.value = P.wipe; F.uWipeDir.value = P.wipeDir; F.uFade.value = P.fade; F.uDrops.value = P.drops;
-    FSQ.draw(M_.final, null);
+    F.uLift.value = P.lift ?? 1; F.uSplit.value = P.split ?? 1;
+    const mode = P.filter || 0;
+    FSQ.draw(M_.final, mode ? this.ldrRT : null);
+    if (mode) {
+      if (mode === FILTER_ID.thermal && !hold) this.renderHeat(cam);
+      const X = M_.filter.uniforms;
+      X.tLDR.value = this.ldrRT.texture; X.tHDR.value = this.fullRT.texture; X.tBloom.value = this.bloom[0].texture; X.tDepth.value = this.sceneRT.depthTexture;
+      X.tHeat.value = this.heatRT.texture; X.tHeatDepth.value = this.heatRT.depthTexture;
+      X.uRes.value.set(this.w, this.h); X.uTime.value = P.time; X.uNear.value = cam.near; X.uFar.value = cam.far;
+      X.uFade.value = P.fade; X.uExposure.value = P.exposure; X.uMode.value = mode;
+      FSQ.draw(M_.filter, null);
+    }
     if (P.debugView === 'refl') { M_.copy.uniforms.tColor.value = this.reflRT.texture; FSQ.draw(M_.copy, null); }
   }
 }
@@ -7578,6 +8018,17 @@ function initUI() {
     idx.appendChild(row);
   });
   UI.chips = [...strip.children]; UI.rows = [...idx.children];
+  // looks
+  FILTERS.forEach((f, i) => {
+    const r = document.createElement('button');
+    r.className = 'look-row'; r.innerHTML = `<span class="no"></span><span class="nm">${f.name}</span><span class="jp">${f.jp}</span>`;
+    r.addEventListener('click', () => { setFilter(i); toggleLooks(false); });
+    $('lookrows').appendChild(r);
+  });
+  UI.lookRows = [...$('lookrows').children];
+  $('btn-look').addEventListener('click', () => toggleLooks());
+  $('btn-day').addEventListener('click', toggleDay);
+  setFilter(POST.filter, true);
   // transport
   $('btn-play').addEventListener('click', togglePlay);
   $('btn-prev').addEventListener('click', () => gotoShot(SEQ.idx - 1));
@@ -7608,11 +8059,13 @@ function initUI() {
     else if (k === 't' || k === 'T') toggleTransitions();
     else if (k === 'a' || k === 'A') $('btn-auto').click();
     else if (k === 'e' || k === 'E') { if (!e.repeat) SEQ.explore ? exitExplore() : enterExplore(); }
-    else if (k === 'Escape') { if (SEQ.explore) exitExplore(); else if (!$('help').hidden) $('help').hidden = true; else if (!$('index').hidden) toggleIndex(false); }
+    else if (k === 'Escape') { if (SEQ.explore) exitExplore(); else if (!$('help').hidden) $('help').hidden = true; else if (!$('looks').hidden) toggleLooks(false); else if (!$('index').hidden) toggleIndex(false); }
     else if (k === 'h' || k === 'H') toggleUI();
     else if (k === 'f' || k === 'F') toggleFullscreen();
     else if (k === 'm' || k === 'M') toggleMap();
     else if (k === 'c' || k === 'C') toggleIndex();
+    else if (k === 'v' || k === 'V') setFilter(POST.filter + (e.shiftKey ? -1 : 1));
+    else if (k === 'n' || k === 'N') toggleDay();
     else if (k === 's' || k === 'S') { if (!SEQ.explore) toggleSound(); }
     else if (k === '[') setSpeed(SEQ.speed <= 0.25 ? 0.25 : SEQ.speed / 2);
     else if (k === ']') setSpeed(SEQ.speed >= 2 ? 2 : SEQ.speed * 2);
@@ -7697,6 +8150,30 @@ function toggleIndex(force) {
   const el = $('index'); el.hidden = force == null ? !el.hidden : !force;
   $('btn-index').setAttribute('aria-pressed', !el.hidden);
 }
+function toggleLooks(force) {
+  const el = $('looks'); el.hidden = force == null ? !el.hidden : !force;
+  $('btn-look').setAttribute('aria-expanded', !el.hidden);
+}
+function setFilter(i, quiet) {
+  POST.filter = (i + FILTERS.length) % FILTERS.length;
+  const f = FILTERS[POST.filter];
+  $('btn-look').textContent = f.name;
+  $('btn-look').setAttribute('aria-label', `Look: ${f.name}`);
+  UI.lookRows.forEach((r, j) => r.classList.toggle('on', j === POST.filter));
+  if (!quiet) toast(`${f.name} · ${f.jp}`);
+}
+// A short dip to black hides the moment the street relights (the first switch to day captures its reflections).
+function toggleDay() {
+  const dip = $('dip');
+  dip.style.opacity = 1;
+  setTimeout(() => { setDay(!DAY.on); requestAnimationFrame(() => { dip.style.opacity = 0; }); }, REDUCED_MOTION ? 0 : 260);
+}
+UI.onDay = on => {
+  const b = $('btn-day');
+  b.textContent = on ? 'Day' : 'Night'; b.setAttribute('aria-pressed', on);
+  $('cond').textContent = on ? 'SAT 4 OCT · 15°C · SUN SHOWER 08:31' : 'SAT 4 OCT · 12°C · RAIN STOPPED 19:31';
+  toast(on ? 'Day · 08:42, a sun shower' : 'Night · 19:42, the blue hour');
+};
 function toggleMap() {
   const el = $('mapwrap'); el.hidden = !el.hidden;
   $('btn-map').setAttribute('aria-pressed', !el.hidden);
@@ -7743,13 +8220,17 @@ UI.onExplore = (on) => {
 
 function updateHUD() {
   const T = SEQ.world;
-  const tod = 19 * 3600 + 42 * 60 + T;
+  const tod = clockAt(T);
   const hh = Math.floor(tod / 3600) % 24, mm = Math.floor(tod / 60) % 60, ss = Math.floor(tod) % 60, ff = Math.floor(fract(tod) * 24);
   const p2 = n => String(n).padStart(2, '0');
   $('tc').textContent = `${p2(hh)}:${p2(mm)}:${p2(ss)}:${p2(ff)}`;
   const cc = !!(STATE.look && STATE.look.cctv > 0.5);
   if ($('cctv').hidden === cc) $('cctv').hidden = !cc;
   if (cc) $('cctv-date').textContent = `2026-10-04 ${p2(hh)}:${p2(mm)}:${p2(ss)}`;
+  const flt = FILTERS[POST.filter].id;
+  if ($('osd').hidden === (flt === 'vhs')) $('osd').hidden = flt !== 'vhs';
+  if ($('thermhud').hidden === (flt === 'thermal')) $('thermhud').hidden = flt !== 'thermal';
+  if (flt === 'vhs') $('osd-time').textContent = `${hh < 12 ? 'AM' : 'PM'} ${(hh + 11) % 12 + 1}:${p2(mm)}:${p2(ss)}`;
   const i = SEQ.tr ? SEQ.tr.to : SEQ.idx;
   const prog = SEQ.tr ? 0 : clamp(SEQ.t / shotDur(SEQ.idx), 0, 1);
   const chip = UI.chips[i];
@@ -7970,7 +8451,7 @@ function filmOverlay(c, W, H) {
     c.save(); c.globalAlpha = sstep(0.5, 0.9, cc);
     c.fillStyle = 'rgba(230,240,230,.86)'; c.shadowColor = '#000'; c.shadowBlur = 2 * k;
     c.font = `500 ${14 * k}px ${FONTS.mono}, ${FONTS.gothic}`; c.letterSpacing = `${0.9 * k}px`;
-    const tod = 19 * 3600 + 42 * 60 + SEQ.world, p2 = n => String(Math.floor(n)).padStart(2, '0');
+    const tod = clockAt(SEQ.world), p2 = n => String(Math.floor(n)).padStart(2, '0');
     text(`2026-10-04 ${p2(tod / 3600 % 24)}:${p2(tod / 60 % 60)}:${p2(tod % 60)}`, W * 0.03, H * 0.05 + 12 * k);
     text('CAM-15 · 灯町3-12 北向', W * 0.03, H * 0.05 + 32 * k);
     c.textAlign = 'right';
@@ -8160,7 +8641,7 @@ function renderNow(dtReal) {
   STATE.look = look;
   applyCamera(o);
   attachments(o);
-  updateRain(camera, o.rain);
+  updateRain(camera, o.rain * (FILTERS[POST.filter].rain ?? 1));
   FX.drips.material.uniforms.uCam.value.copy(camera.position);
   const wide = clamp((35 - o.mm) / 20, 0, 1);
   const cctvActive = look.cctv > 0.99 && !SEQ.tr && !SEQ.explore;
@@ -8173,6 +8654,10 @@ function renderNow(dtReal) {
     cctv: look.cctv, glitch: look.glitch, wipe: look.wipe, wipeDir: look.wipeDir, fade: look.fade, drops: look.drops,
     refl: true, reflPlane: o.reflPlane, hold, cut: SEQ.cutFlag || look.cut, dof: DEBUG.dof, debugView: DEBUG.view,
   };
+  if (DAY.on) Object.assign(P, { exposure: P.exposure * 1.35, bloom: 0.045, halation: 0.008, split: 0.3, lift: 0, sat: 1.12 });
+  const flt = FILTERS[POST.filter];
+  if (flt.P) for (const k in flt.P) P[k] = k === 'exposure' ? P[k] * flt.P[k] : flt.P[k];
+  P.filter = POST.filter;
   if (DEBUG.raw) { P.bloom = 0; P.halation = 0; P.grain = 0; P.vignette = 0; P.ca = 0; P.mb = 0; }
   pipeline.render(camera, P);
   SEQ.cutFlag = false;
@@ -8227,9 +8712,10 @@ async function boot() {
     COMP = buildCompanions();
     buildHero();
     buildBikes();
+    tagWarmBodies();
     finishAtlases();
     progress('Light…', 0.74); await tick();
-    bakeLightField(); buildLights();
+    bakeLightField(); buildLights(); bakeSunMap(); buildSunProxies();
     buildRain(); buildDrips(); buildSteam(); buildHalos(); buildLanterns(); buildSignalLamps(); buildLED(); buildSmallFX();
     pipeline = new Pipeline();
     initUI();
@@ -8247,9 +8733,11 @@ async function boot() {
     camera.layers.enableAll();
     renderer.setRenderTarget(pipeline.sceneRT);
     try { await renderer.compileAsync(scene, camera); } catch (e) { renderer.compile(scene, camera); }
+    FSQ.draw(pipeline.mats.filter, pipeline.ldrRT);   // the looks pass too, so the first switch doesn't stall
     camera.layers.set(0); camera.layers.enable(LAYER_NOREFL);
     progress('Lighting the street…', 0.9); await tick();
-    captureEnvironment([FX.rain, FX.drips, FX.steam, FX.halos, FX.lanterns]);
+    ENV_HIDDEN.push(FX.rain, FX.drips, FX.steam, FX.halos, FX.lanterns);
+    DAY.env.night = captureEnvironment(); scene.environmentIntensity = 0.32;
     placeholder.dispose(); pmremPH.dispose();
     if (TEST) { const progs = renderer.info.programs; console.log('[programs] ' + progs.length); const names = {}; progs.forEach(pr => { const k = (pr.name || '?') + '|' + pr.cacheKey.length; names[pr.name] = (names[pr.name] || 0) + 1; }); console.log('[programs by type] ' + JSON.stringify(names)); window.__progs = progs.map(pr => pr.cacheKey); }
     progress('Ready.', 1);
@@ -8291,6 +8779,8 @@ if (TEST) {
     DEBUG.dof = opts.dof !== false; DEBUG.raw = !!opts.raw; DEBUG.halos = opts.halos !== false; DEBUG.rain = opts.rain !== false;
     FX.halos.visible = DEBUG.halos; FX.rain.visible = DEBUG.rain; FX.sigHalo.visible = DEBUG.halos;
     if (opts.exposure) window.__exp = opts.exposure;
+    setFilter(opts.filter == null ? 0 : typeof opts.filter === 'string' ? FILTER_ID[opts.filter] : opts.filter, true);
+    if (!!opts.day !== DAY.on) setDay(!!opts.day);
     UI.onShot(i, false);
     SEQ.cutFlag = true;
     renderNow(1 / 60);
