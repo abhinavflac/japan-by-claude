@@ -22,6 +22,7 @@ try {
       : `window.__shot(${s.cam}, ${s.u ?? 0.5}, ${s.t ?? 20}, ${JSON.stringify(s.opts || {})})`;
     let r;
     try { r = JSON.stringify(await page.evaluate(expr)); if (s.eval) r += ' ' + JSON.stringify(await page.evaluate(s.eval)); } catch (e) { r = 'EXC ' + e.message; }
+    if (s.opts?.hideUI) await new Promise(res => setTimeout(res, 600));   // let the interface finish fading out
     const shotR = await page.send('Page.captureScreenshot', { format: 'jpeg', quality: 88 });
     const name = s.name || `cam${String(s.cam).padStart(2, '0')}_${s.u ?? 0.5}`;
     fs.writeFileSync(path.join(outDir, name + '.jpg'), Buffer.from(shotR.data, 'base64'));

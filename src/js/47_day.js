@@ -1,13 +1,13 @@
 /* ============================================================
-   Day and night: the same street at 14:42 under the afternoon sun
-   just after a shower, or at 19:42 in the blue hour. One switch
+   Day and night: the same street at 08:42 under a low morning sun
+   in a passing shower, or at 19:42 in the blue hour. One switch
    moves the lights, the sky, the fog, the grade and everything
    that glows; the shaders stay the same programs either way.
    ============================================================ */
 
 const DAY = { on: false, env: {}, glow: 1 };
 const NIGHT_LOOK = { hemi: [0x3d5793, 0x0e0c0a, 2.8], sun: [0x8090c0, 0.12], fog: [0x0c111c, 0.0105] };
-const DAY_LOOK = { hemi: [0xb9d0ef, 0x5d5448, 1.5], sun: [0xfff0da, 3.4], fog: [0x9fb2c6, 0.0042] };
+const DAY_LOOK = { hemi: [0xb9d0ef, 0x5d5448, 1.1], sun: [0xffeacc, 5.2], fog: [0x9fb2c6, 0.0042] };
 // Point lights by day, as a share of their night strength: shops stay lit, street lamps go out.
 const LIGHT_DAY = { pilotis: 0.3, kissaten: 0.35, ramen: 0.35, conbini: 0.4, lampE: 0, lampW: 0, vending: 0.4, izakaya: 0.35, alley: 0.5, soba: 0.35, pharmacy: 0.4, laundry: 0.4, koban: 0.6, spot: 0.3 };
 
@@ -48,7 +48,7 @@ function setDay(on) {
 }
 
 // Seconds since midnight for world time T: the same minute, by night or by day.
-const clockAt = T => (DAY.on ? 14 : 19) * 3600 + 42 * 60 + T;
+const clockAt = T => (DAY.on ? 8 : 19) * 3600 + 42 * 60 + T;
 
 // The sun's shadow map holds what moves (people, cars, him) and the posts, in a square that follows the camera;
 // the blocks are already in the baked map. Snapped to its texels so edges hold still while the camera moves.

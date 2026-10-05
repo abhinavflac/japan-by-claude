@@ -179,8 +179,8 @@ function toggleDay() {
 UI.onDay = on => {
   const b = $('btn-day');
   b.textContent = on ? 'Day' : 'Night'; b.setAttribute('aria-pressed', on);
-  $('cond').textContent = on ? 'SAT 4 OCT · 19°C · SUN SHOWER 14:31' : 'SAT 4 OCT · 12°C · RAIN STOPPED 19:31';
-  toast(on ? 'Day · 14:42, a sun shower' : 'Night · 19:42, the blue hour');
+  $('cond').textContent = on ? 'SAT 4 OCT · 15°C · SUN SHOWER 08:31' : 'SAT 4 OCT · 12°C · RAIN STOPPED 19:31';
+  toast(on ? 'Day · 08:42, a sun shower' : 'Night · 19:42, the blue hour');
 };
 function toggleMap() {
   const el = $('mapwrap'); el.hidden = !el.hidden;

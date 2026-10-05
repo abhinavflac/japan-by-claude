@@ -53,8 +53,10 @@ function bakeLightField() {
 let LF_CANVAS = null;
 const COVERS = []; // awnings and eaves keep the pavement below them dry
 
-/* ---------- the afternoon sun: 14:42, south-west, 33 degrees up ---------- */
-const SUN = { dir: new THREE.Vector3(-0.539, 0.545, -0.642).normalize() };
+/* ---------- the morning sun: 08:42, east-south-east and 30 degrees up ---------- */
+// The plan's north is +x and east is +z: the street runs east to west, so only a low eastern sun reaches
+// its floor past the south-side blocks, shining down it from behind most of the cameras.
+const SUN = { dir: new THREE.Vector3(-0.224, 0.5, 0.837).normalize() };
 
 // For each point of the plan, the height below which a block hides the sun (read by SUN_PARS). A block is a
 // prism: the ray toward the sun enters its footprint at t and is still under the roof there if y + sy * t < h.

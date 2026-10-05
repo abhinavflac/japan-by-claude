@@ -112,7 +112,7 @@ function renderNow(dtReal) {
     cctv: look.cctv, glitch: look.glitch, wipe: look.wipe, wipeDir: look.wipeDir, fade: look.fade, drops: look.drops,
     refl: true, reflPlane: o.reflPlane, hold, cut: SEQ.cutFlag || look.cut, dof: DEBUG.dof, debugView: DEBUG.view,
   };
-  if (DAY.on) Object.assign(P, { bloom: 0.045, halation: 0.008, split: 0.3, lift: 0, sat: 1.03 });
+  if (DAY.on) Object.assign(P, { exposure: P.exposure * 1.35, bloom: 0.045, halation: 0.008, split: 0.3, lift: 0, sat: 1.12 });
   const flt = FILTERS[POST.filter];
   if (flt.P) for (const k in flt.P) P[k] = k === 'exposure' ? P[k] * flt.P[k] : flt.P[k];
   P.filter = POST.filter;
