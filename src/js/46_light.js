@@ -53,15 +53,67 @@ function bakeLightField() {
 let LF_CANVAS = null;
 const COVERS = []; // awnings and eaves keep the pavement below them dry
 
+/* ---------- the afternoon sun: 14:42, south-west, 33 degrees up ---------- */
+const SUN = { dir: new THREE.Vector3(-0.539, 0.545, -0.642).normalize() };
+
+// For each point of the plan, the height below which a block hides the sun (read by SUN_PARS). A block is a
+// prism: the ray toward the sun enters its footprint at t and is still under the roof there if y + sy * t < h.
+// Raised slabs (the viaduct deck, the arch) count only where their shadow reaches the ground.
+function bakeSunMap() {
+  const R = U.uSunRect.value, N = QUALITY.name === 'low' ? 1024 : 2048, d = SUN.dir;
+  const occ = MAP_BLOCKS.filter(b => b.h > 0 && !b.rail).map(b => [b.x0, b.z0, b.x1, b.z1, 0, b.h]);
+  occ.push([-420, VIADUCT.z0, 420, VIADUCT.z1, VIADUCT.deckBottom, VIADUCT.deckTop + 1.1], [-6.1, 37.9, 6.1, 38.5, 6.4, 7.95]);
+  const pos = [], box = [], ys = [], idx = [];
+  occ.forEach(([x0, z0, x1, z1, y0, y1], i) => {
+    const ex = -d.x / d.y * y1, ez = -d.z / d.y * y1;   // the farthest the roof edge throws its shadow
+    const qx0 = Math.min(x0, x0 + ex), qx1 = Math.max(x1, x1 + ex), qz0 = Math.min(z0, z0 + ez), qz1 = Math.max(z1, z1 + ez);
+    for (const [x, z] of [[qx0, qz0], [qx1, qz0], [qx1, qz1], [qx0, qz1]]) { pos.push(x, 0, z); box.push(x0, z0, x1, z1); ys.push(y0, y1); }
+    idx.push(i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3);
+  });
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('aBox', new THREE.Float32BufferAttribute(box, 4));
+  g.setAttribute('aY', new THREE.Float32BufferAttribute(ys, 2));
+  g.setIndex(idx);
+  const m = new THREE.Mesh(g, new THREE.ShaderMaterial({
+    uniforms: { uRect: { value: R }, uDir: { value: d } },
+    vertexShader: /* glsl */`
+      uniform vec4 uRect; attribute vec4 aBox; attribute vec2 aY; varying vec2 vP; varying vec4 vBox; varying vec2 vY;
+      void main(){ vP = position.xz; vBox = aBox; vY = aY; gl_Position = vec4((position.xz - uRect.xy) / uRect.zw * 2.0 - 1.0, 0.0, 1.0); }`,
+    fragmentShader: /* glsl */`
+      uniform vec3 uDir; varying vec2 vP; varying vec4 vBox; varying vec2 vY;
+      void main(){
+        vec2 t0 = (vBox.xy - vP) / uDir.xz, t1 = (vBox.zw - vP) / uDir.xz;
+        vec2 tn = min(t0, t1), tf = max(t0, t1);
+        float tin = max(max(tn.x, tn.y), 0.0), tout = min(tf.x, tf.y);
+        if (tout < tin || vY.x - uDir.y * tout > 0.2) discard;
+        gl_FragColor = vec4(vY.y - uDir.y * tin, 0.0, 0.0, 1.0);
+      }`,
+    blending: THREE.CustomBlending, blendEquation: THREE.MaxEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, depthTest: false, depthWrite: false,
+  }));
+  m.frustumCulled = false;
+  const rt = new THREE.WebGLRenderTarget(N, N, { type: THREE.HalfFloatType, format: THREE.RedFormat, depthBuffer: false });
+  renderer.setRenderTarget(rt); renderer.clear(); renderer.render(m, FSQ.cam); renderer.setRenderTarget(null);
+  g.dispose(); m.material.dispose();
+  U.uSunH.value = rt.texture; SUN.rt = rt;
+}
+
 /* ---------- real lights (a fixed set, so shaders never recompile) ---------- */
 const LIGHTS = {};
 function buildLights() {
   const hemi = new THREE.HemisphereLight(0x3d5793, 0x0e0c0a, 2.8);
   scene.add(hemi);
   LIGHTS.hemi = hemi;
+  // the moon, and by day the sun; it casts shadows in both so switching never recompiles a shader
   const moon = new THREE.DirectionalLight(0x8090c0, 0.12);
   moon.position.set(-40, 80, -60);
-  scene.add(moon);
+  moon.castShadow = true;
+  moon.shadow.mapSize.set(QUALITY.shadow * 2, QUALITY.shadow * 2);
+  moon.shadow.camera.near = 1; moon.shadow.camera.far = 400;
+  moon.shadow.bias = -0.0004; moon.shadow.normalBias = 0.03; moon.shadow.radius = 2;
+  moon.shadow.intensity = 0; moon.shadow.autoUpdate = false; moon.shadow.needsUpdate = true;
+  scene.add(moon, moon.target);
+  LIGHTS.sun = moon;
   // the sign above him: warm, from above, the only shadow caster
   const spot = new THREE.SpotLight(0xffb878, 34, 10, 0.95, 0.85, 2);
   spot.position.set(5.32, 3.62, 0.05);
@@ -101,7 +153,8 @@ function buildLights() {
 }
 
 /* ---------- environment capture from the street itself ---------- */
-function captureEnvironment(hidden = []) {
+const ENV_HIDDEN = [];
+function captureEnvironment(hidden = ENV_HIDDEN) {
   const pmrem = new THREE.PMREMGenerator(renderer);
   const rt = new THREE.WebGLCubeRenderTarget(256, { type: THREE.HalfFloatType, generateMipmaps: false });
   const cube = new THREE.CubeCamera(0.2, 1200, rt);
@@ -114,6 +167,6 @@ function captureEnvironment(hidden = []) {
   hidden.forEach(o => o.visible = true);
   const env = pmrem.fromCubemap(rt.texture).texture;
   scene.environment = env;
-  scene.environmentIntensity = 0.32;
   rt.dispose(); pmrem.dispose();
+  return env;
 }

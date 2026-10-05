@@ -46,7 +46,7 @@ const FILTERS = [
 const FILTER_FS = /* glsl */`
 #include <packing>
 uniform sampler2D tLDR, tHDR, tBloom, tDepth, tHeat, tHeatDepth;
-uniform vec2 uRes; uniform float uTime, uNear, uFar, uFade, uExposure;
+uniform vec2 uRes; uniform float uTime, uNear, uFar, uFade, uExposure, uDay;
 uniform int uMode;
 varying vec2 vUv;
 float hsh(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
@@ -136,7 +136,7 @@ void main(){
     vec2 q = (floor(uv * grid) + 0.5) / grid;
     float d = texture2D(tDepth, q).x, z = linZ(d);
     float L = luma(texture2D(tHDR, q).rgb);
-    float t = 0.17 + 0.3 * sqrt(min(L, 6.0)) - 0.08 * smoothstep(15.0, 250.0, z) + (luma(ldr(q)) - 0.12) * 0.12;
+    float t = 0.17 + 0.3 * (1.0 - 0.55 * uDay) * sqrt(min(L, 6.0)) - 0.08 * smoothstep(15.0, 250.0, z) + (luma(ldr(q)) - 0.12) * 0.12;
     t = mix(t, 0.04 + 0.05 * (1.0 - uv.y), step(1500.0, z));
     float hd = texture2D(tHeatDepth, q).x, hz = linZ(hd);
     float hv = step(hd, 0.999999) * step(hz, z * 1.004 + 0.04);
@@ -146,7 +146,7 @@ void main(){
   } else if (uMode == 7) {
     // night vision: amplified scene light on a green phosphor, photon noise, two tubes
     vec3 h = texture2D(tHDR, uv).rgb + texture2D(tBloom, uv).rgb / 6.0 * 0.5;
-    float L = 1.0 - exp(-luma(h) * 15.0 * uExposure);
+    float L = 1.0 - exp(-luma(h) * 15.0 * uExposure * (1.0 - 0.94 * uDay));
     L = pow(L, 0.85);
     L += (hsh(uv * uRes + fract(uTime * 30.0) * 91.0) - 0.5) * (0.12 + 0.18 * sqrt(L));
     L *= 0.93 + 0.07 * sin(uv.y * uRes.y * 1.6);
@@ -288,7 +288,7 @@ class Pipeline {
       uniform sampler2D tColor, tBloom, tDepth, tDrops;
       uniform mat4 uPrevVP, uInvVP;
       uniform vec2 uRes; uniform float uTime, uExposure, uBloom, uHalation, uVignette, uGrain, uCA, uDistort, uMB, uSat;
-      uniform float uCCTV, uGlitch, uWipe, uWipeDir, uFade, uDrops, uLift;
+      uniform float uCCTV, uGlitch, uWipe, uWipeDir, uFade, uDrops, uLift, uSplit;
       varying vec2 vUv;
       float hsh(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
       const mat3 ACESIn = mat3(vec3(0.59719, 0.07600, 0.02840), vec3(0.35458, 0.90834, 0.13383), vec3(0.04823, 0.01566, 0.83777));
@@ -343,8 +343,8 @@ class Pipeline {
         col *= uExposure;
         col = aces(col);
         float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
-        col = mix(col, col * vec3(0.9, 1.0, 1.08), (1.0 - smoothstep(0.0, 0.32, lum)) * 0.55);
-        col = mix(col, col * vec3(1.05, 1.0, 0.92), smoothstep(0.4, 1.0, lum) * 0.45);
+        col = mix(col, col * vec3(0.9, 1.0, 1.08), (1.0 - smoothstep(0.0, 0.32, lum)) * 0.55 * uSplit);
+        col = mix(col, col * vec3(1.05, 1.0, 0.92), smoothstep(0.4, 1.0, lum) * 0.45 * uSplit);
         col = mix(vec3(lum), col, uSat);
         col += uLift * vec3(0.006, 0.008, 0.012);
         if (uCCTV > 0.0) {
@@ -370,11 +370,11 @@ class Pipeline {
       uPrevVP: { value: new THREE.Matrix4() }, uInvVP: { value: new THREE.Matrix4() },
       uRes: { value: new THREE.Vector2(1, 1) }, uTime: { value: 0 }, uExposure: { value: 1 }, uBloom: { value: 0.045 }, uHalation: { value: 0.03 },
       uVignette: { value: 0.35 }, uGrain: { value: 0.035 }, uCA: { value: 0.004 }, uDistort: { value: 0 }, uMB: { value: 1 }, uSat: { value: 1.04 },
-      uCCTV: { value: 0 }, uGlitch: { value: 0 }, uWipe: { value: 0 }, uWipeDir: { value: 1 }, uFade: { value: 0 }, uDrops: { value: 0 }, uLift: { value: 1 },
+      uCCTV: { value: 0 }, uGlitch: { value: 0 }, uWipe: { value: 0 }, uWipeDir: { value: 1 }, uFade: { value: 0 }, uDrops: { value: 0 }, uLift: { value: 1 }, uSplit: { value: 1 },
     });
     M_.filter = pass(FILTER_FS, {
       tLDR: { value: null }, tHDR: { value: null }, tBloom: { value: null }, tDepth: { value: null }, tHeat: { value: null }, tHeatDepth: { value: null },
-      uRes: { value: new THREE.Vector2(1, 1) }, uTime: { value: 0 }, uNear: { value: 0.1 }, uFar: { value: 1000 }, uFade: { value: 0 }, uExposure: { value: 1 }, uMode: { value: 0 },
+      uRes: { value: new THREE.Vector2(1, 1) }, uTime: { value: 0 }, uNear: { value: 0.1 }, uFar: { value: 1000 }, uFade: { value: 0 }, uExposure: { value: 1 }, uMode: { value: 0 }, uDay: U.uDay,
     });
     this.bloomLevels = 6;
   }
@@ -457,6 +457,7 @@ class Pipeline {
       cam.updateMatrixWorld();
       if (P.refl && QUALITY.refl > 0) this.renderReflection(cam, P.reflPlane || 0);
       else U.uReflOn.value = 0;
+      updateSun(cam);
       renderer.setRenderTarget(this.sceneRT);
       renderer.clear();
       renderer.render(scene, cam);
@@ -515,6 +516,7 @@ class Pipeline {
     F.uVignette.value = P.vignette; F.uGrain.value = P.grain; F.uCA.value = P.ca; F.uDistort.value = P.distort;
     F.uMB.value = hold ? 0 : P.mb; F.uSat.value = P.sat; F.uCCTV.value = P.cctv; F.uGlitch.value = P.glitch;
     F.uWipe.value = P.wipe; F.uWipeDir.value = P.wipeDir; F.uFade.value = P.fade; F.uDrops.value = P.drops;
+    F.uLift.value = P.lift ?? 1; F.uSplit.value = P.split ?? 1;
     const mode = P.filter || 0;
     FSQ.draw(M_.final, mode ? this.ldrRT : null);
     if (mode) {

@@ -35,6 +35,7 @@ function initUI() {
   });
   UI.lookRows = [...$('lookrows').children];
   $('btn-look').addEventListener('click', () => toggleLooks());
+  $('btn-day').addEventListener('click', toggleDay);
   setFilter(POST.filter, true);
   // transport
   $('btn-play').addEventListener('click', togglePlay);
@@ -72,6 +73,7 @@ function initUI() {
     else if (k === 'm' || k === 'M') toggleMap();
     else if (k === 'c' || k === 'C') toggleIndex();
     else if (k === 'v' || k === 'V') setFilter(POST.filter + (e.shiftKey ? -1 : 1));
+    else if (k === 'n' || k === 'N') toggleDay();
     else if (k === 's' || k === 'S') { if (!SEQ.explore) toggleSound(); }
     else if (k === '[') setSpeed(SEQ.speed <= 0.25 ? 0.25 : SEQ.speed / 2);
     else if (k === ']') setSpeed(SEQ.speed >= 2 ? 2 : SEQ.speed * 2);
@@ -168,6 +170,18 @@ function setFilter(i, quiet) {
   UI.lookRows.forEach((r, j) => r.classList.toggle('on', j === POST.filter));
   if (!quiet) toast(`${f.name} · ${f.jp}`);
 }
+// A short dip to black hides the moment the street relights (the first switch to day captures its reflections).
+function toggleDay() {
+  const dip = $('dip');
+  dip.style.opacity = 1;
+  setTimeout(() => { setDay(!DAY.on); requestAnimationFrame(() => { dip.style.opacity = 0; }); }, REDUCED_MOTION ? 0 : 260);
+}
+UI.onDay = on => {
+  const b = $('btn-day');
+  b.textContent = on ? 'Day' : 'Night'; b.setAttribute('aria-pressed', on);
+  $('cond').textContent = on ? 'SAT 4 OCT · 19°C · SUN SHOWER 14:31' : 'SAT 4 OCT · 12°C · RAIN STOPPED 19:31';
+  toast(on ? 'Day · 14:42, a sun shower' : 'Night · 19:42, the blue hour');
+};
 function toggleMap() {
   const el = $('mapwrap'); el.hidden = !el.hidden;
   $('btn-map').setAttribute('aria-pressed', !el.hidden);
@@ -214,7 +228,7 @@ UI.onExplore = (on) => {
 
 function updateHUD() {
   const T = SEQ.world;
-  const tod = 19 * 3600 + 42 * 60 + T;
+  const tod = clockAt(T);
   const hh = Math.floor(tod / 3600) % 24, mm = Math.floor(tod / 60) % 60, ss = Math.floor(tod) % 60, ff = Math.floor(fract(tod) * 24);
   const p2 = n => String(n).padStart(2, '0');
   $('tc').textContent = `${p2(hh)}:${p2(mm)}:${p2(ss)}:${p2(ff)}`;

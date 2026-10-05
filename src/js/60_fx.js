@@ -18,12 +18,12 @@ function buildRain() {
   const m = new THREE.ShaderMaterial({
     uniforms: {
       uTime: U.uTime, uCam: { value: new THREE.Vector3() }, uBox: { value: new THREE.Vector3(36, 18, 36) },
-      uLen: { value: 0.12 }, uWidth: { value: 0.0028 }, uAmt: { value: 1 }, uLF: U.uLF, uLFRect: U.uLFRect,
+      uLen: { value: 0.12 }, uWidth: { value: 0.0028 }, uAmt: { value: 1 }, uLF: U.uLF, uLFRect: U.uLFRect, uSky: { value: new THREE.Vector3(0.006, 0.008, 0.013) },
       uL: { value: Array.from({ length: 6 }, () => new THREE.Vector4()) }, uLC: { value: Array.from({ length: 6 }, () => new THREE.Vector3()) },
       uFogColor: U.uFogColor, uFogDensity: U.uFogDensity,
     },
     vertexShader: /* glsl */`
-      uniform float uTime, uLen, uWidth; uniform vec3 uCam, uBox; uniform sampler2D uLF; uniform vec4 uLFRect;
+      uniform float uTime, uLen, uWidth; uniform vec3 uCam, uBox, uSky; uniform sampler2D uLF; uniform vec4 uLFRect;
       uniform vec4 uL[6]; uniform vec3 uLC[6];
       attribute vec4 aSeed;
       varying float vA; varying vec3 vC; varying vec2 vUv;
@@ -42,7 +42,7 @@ function buildRain() {
         vec2 uv = (p.xz - uLFRect.xy) / uLFRect.zw;
         vec4 lf = (uv.x > 0.0 && uv.x < 1.0 && uv.y > 0.0 && uv.y < 1.0) ? texture2D(uLF, uv) : vec4(0.0, 0.0, 0.0, 1.0);
         float sky = step(0.5, lf.a);
-        vec3 light = lf.rgb * lf.rgb * 1.0 * exp(-max(p.y, 0.0) * 0.18) + vec3(0.006, 0.008, 0.013);
+        vec3 light = lf.rgb * lf.rgb * 1.0 * exp(-max(p.y, 0.0) * 0.18) + uSky;
         for (int i = 0; i < 6; i++) { vec3 d = p - uL[i].xyz; light += uLC[i] * uL[i].w * 0.8 / (1.0 + dot(d, d) * 2.5); }
         float dist = length(uCam - p);
         vA = sky * smoothstep(1.2, 3.2, dist) * (1.0 - smoothstep(7.0, 12.0, dist)) * step(0.02, p.y);
@@ -173,7 +173,7 @@ function buildSteam() {
   g.setAttribute('aD', new THREE.InstancedBufferAttribute(D, 4));
   g.instanceCount = n;
   const m = new THREE.ShaderMaterial({
-    uniforms: { uTime: U.uTime, tPuff: { value: TEX.puff }, uFogColor: U.uFogColor, uFogDensity: U.uFogDensity },
+    uniforms: { uTime: U.uTime, tPuff: { value: TEX.puff }, uFogColor: U.uFogColor, uFogDensity: U.uFogDensity, uAmb: { value: new THREE.Vector3() } },
     vertexShader: /* glsl */`
       uniform float uTime; attribute vec4 aA, aB, aC, aD;
       varying vec2 vUv; varying float vA; varying vec3 vC; varying float vRot; varying vec3 vW;
@@ -201,14 +201,14 @@ function buildSteam() {
         gl_Position = projectionMatrix * viewMatrix * vec4(pos, 1.0);
       }`,
     fragmentShader: /* glsl */`
-      uniform sampler2D tPuff; uniform vec3 uFogColor; uniform float uFogDensity;
+      uniform sampler2D tPuff; uniform vec3 uFogColor, uAmb; uniform float uFogDensity;
       varying vec2 vUv; varying float vA; varying vec3 vC; varying vec3 vW;
       ${FOG_FN}
       void main(){
         float a = texture2D(tPuff, vUv).a * vA;
         if (a < 0.003) discard;
         float f = hFogAmount(vW, cameraPosition, uFogDensity);
-        vec3 c = mix(vC, hFogColor(uFogColor, vW), f);
+        vec3 c = mix(vC + uAmb, hFogColor(uFogColor, vW), f);
         gl_FragColor = vec4(c * a, a);
       }`,
     transparent: true, depthWrite: false, blending: THREE.CustomBlending,
@@ -412,13 +412,13 @@ function updateSmallFX(T) {
   if (FX.tube) {
     const h = hash1(Math.floor(T * 14)), h2 = hash1(Math.floor(T * 0.7));
     const on = h2 < 0.7 ? 1 : (h < 0.5 ? 0.15 : 1);
-    FX.tube.material.color.setRGB(6 * on, 6.5 * on, 7 * on);
+    FX.tube.material.color.setRGB(6, 6.5, 7).multiplyScalar(on * DAY.glow);
   }
   // his sign's neon stutters for a moment every 17 seconds
   const c = fract(T / 17) * 17;
   let neon = 1;
   if (c > 11.0 && c < 11.6) neon = (hash1(Math.floor(T * 24)) < 0.55) ? 0.08 : 0.9;
-  M.neon.color.setScalar(neon);
+  M.neon.color.setScalar(neon * DAY.glow);
   if (FX.heroHalo >= 0) { FX.halos.setColorAt(FX.heroHalo, _c1.setRGB(0.07, 0.056, 0.042).multiplyScalar(0.55 + 0.45 * neon)); FX.halos.instanceColor.needsUpdate = true; }
   for (const i of FX.blinkers) FX.halos.setColorAt(i, fract(T * 0.55 + i * 0.37) < 0.18 ? _c1.setRGB(0.9, 0.05, 0.03) : _c1.setRGB(0.02, 0.0, 0.0));
   if (FX.blinkers.length) FX.halos.instanceColor.needsUpdate = true;

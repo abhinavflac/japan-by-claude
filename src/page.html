@@ -144,6 +144,7 @@ button{font:inherit;color:inherit}
 #thermhud .ret::before,#thermhud .ret::after{content:"";position:absolute;background:rgba(255,255,255,.8)}
 #thermhud .ret::before{left:0;right:0;top:50%;height:1px}
 #thermhud .ret::after{top:0;bottom:0;left:50%;width:1px}
+#dip{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .25s ease}
 #endcard{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;pointer-events:none;
   text-align:center;opacity:0;transition:opacity 1.2s ease}
 #endcard .e1{font-weight:500;font-size:clamp(14px,2.2vw,26px);letter-spacing:.42em;text-transform:uppercase;padding-left:.42em}
@@ -223,6 +224,7 @@ button{font:inherit;color:inherit}
     </div>
     <div id="osd" hidden><div class="tl">PLAY ▶</div><div class="tr">SP</div><div class="bl"><div id="osd-time">PM 7:42</div><div>OCT. 4 2026</div></div></div>
     <div id="thermhud" hidden><div class="tl">THERMAL · IRON · AUTO · 9 Hz</div><div class="ret"></div><div class="scale"><span style="top:0">36°C</span><span style="top:50%">22°C</span><span style="top:100%">8°C</span></div></div>
+    <div id="dip"></div>
     <div id="endcard"><div class="e1">One world. One moment. 24 cameras.</div><div class="e2">ひとつの街、ひとつの瞬間、二十四台のカメラ</div></div>
   </div>
 
@@ -238,6 +240,7 @@ button{font:inherit;color:inherit}
     </div>
     <div class="tc"><div id="tc">19:42:00:00</div><div class="lbl" id="tclbl">World clock · 24 fps</div>
       <div class="modes">
+        <button class="btn" id="btn-day" aria-pressed="false" title="Day or night (N)">Night</button>
         <button class="btn" id="btn-look" aria-expanded="false" aria-controls="looks" title="Look (V)">Cinema</button>
       </div>
     </div>
@@ -294,6 +297,7 @@ button{font:inherit;color:inherit}
         <dt>A</dt><dd>Auto-advance through the sequence</dd>
         <dt>E</dt><dd>Free camera; pause first to walk around a frozen moment</dd>
         <dt>[ ]</dt><dd>Slower or faster playback</dd>
+        <dt>N</dt><dd>Day or night: the same minute at 14:42 or 19:42</dd>
         <dt>V</dt><dd>Next look: noir, vintage, VHS, 8-bit, anime, thermal, night vision, tilt-shift (Shift goes back)</dd>
         <dt>C · M</dt><dd>Camera index · map</dd>
         <dt>H · F</dt><dd>Hide the interface · fullscreen</dd>

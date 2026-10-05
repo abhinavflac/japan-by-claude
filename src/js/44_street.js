@@ -249,7 +249,7 @@ function buildLamps() {
     wadd('metal', M.metal, G.box, mat(x + side * 0.0, CURB_H + 4.55, z, 0, 0, 0, 0.06, 0.06, 0.9), post, { colors: true });
     for (const dz of [-0.45, 0.45]) {
       const hp = V3(x, CURB_H + 4.28, z + dz);
-      wadd('glowc', M.glow, G.sph12, mat(hp.x, hp.y, hp.z, 0, 0, 0, 0.34, 0.42, 0.34), hdr(16, 11.5, 6.8), { colors: true });
+      wadd('lampc', M.lamp, G.sph12, mat(hp.x, hp.y, hp.z, 0, 0, 0, 0.34, 0.42, 0.34), hdr(16, 11.5, 6.8), { colors: true });
       wadd('metal', M.metal, G.cyl8, mat(hp.x, hp.y + 0.25, hp.z, 0, 0, 0, 0.36, 0.07, 0.36), post, { colors: true });
       LAMPS.push(hp);
     }
@@ -271,8 +271,8 @@ function buildArch() {
   wadd('signs', M.signs, atlasPlane(front), mat(0, 6.98, z + 0.23, 0, 0, 0, 9.6, 1.0, 1));
   wadd('signs', M.signs, atlasPlane(back), mat(0, 6.98, z - 0.23, Math.PI, 0, 0, 9.6, 1.0, 1));
   for (let x = -4.8; x <= 4.8; x += 0.4) for (const dz of [0.26, -0.26]) {
-    wadd('glowc', M.glow, G.sph8, mat(x, 6.38, z + dz, 0, 0, 0, 0.07, 0.07, 0.07), hdr(9, 7, 4), { colors: true });
-    wadd('glowc', M.glow, G.sph8, mat(x, 7.6, z + dz, 0, 0, 0, 0.07, 0.07, 0.07), hdr(9, 7, 4), { colors: true });
+    wadd('lampc', M.lamp, G.sph8, mat(x, 6.38, z + dz, 0, 0, 0, 0.07, 0.07, 0.07), hdr(9, 7, 4), { colors: true });
+    wadd('lampc', M.lamp, G.sph8, mat(x, 7.6, z + dz, 0, 0, 0, 0.07, 0.07, 0.07), hdr(9, 7, 4), { colors: true });
   }
   SIGN_GLOWS.push({ p: V3(0, 7.0, z + 0.6), size: 6.5, color: new THREE.Color('#ffe8c8').multiplyScalar(0.05) });
   SIGN_GLOWS.push({ p: V3(0, 7.0, z - 0.6), size: 6.5, color: new THREE.Color('#ffe8c8').multiplyScalar(0.04) });

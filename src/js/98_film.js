@@ -56,7 +56,7 @@ function filmOverlay(c, W, H) {
     c.save(); c.globalAlpha = sstep(0.5, 0.9, cc);
     c.fillStyle = 'rgba(230,240,230,.86)'; c.shadowColor = '#000'; c.shadowBlur = 2 * k;
     c.font = `500 ${14 * k}px ${FONTS.mono}, ${FONTS.gothic}`; c.letterSpacing = `${0.9 * k}px`;
-    const tod = 19 * 3600 + 42 * 60 + SEQ.world, p2 = n => String(Math.floor(n)).padStart(2, '0');
+    const tod = clockAt(SEQ.world), p2 = n => String(Math.floor(n)).padStart(2, '0');
     text(`2026-10-04 ${p2(tod / 3600 % 24)}:${p2(tod / 60 % 60)}:${p2(tod % 60)}`, W * 0.03, H * 0.05 + 12 * k);
     text('CAM-15 · 灯町3-12 北向', W * 0.03, H * 0.05 + 32 * k);
     c.textAlign = 'right';

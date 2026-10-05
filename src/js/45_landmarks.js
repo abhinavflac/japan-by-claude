@@ -357,7 +357,7 @@ function buildBackBlocks() {
   lamps.forEach((p, i) => lampIM.setMatrixAt(i, mat(p.x, p.y, p.z, 0, 0, 0, 0.3, 0.3, 0.3)));
   scene.add(lampIM);
   BACK_LAMPS.push(...lamps);
-  const pools = new THREE.InstancedMesh(G.ground, new THREE.MeshBasicMaterial({ map: TEX.glow, color: new THREE.Color(0.55, 0.42, 0.28), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), lamps.length);
+  const pools = new THREE.InstancedMesh(G.ground, M.backPool = new THREE.MeshBasicMaterial({ map: TEX.glow, color: new THREE.Color(0.55, 0.42, 0.28), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), lamps.length);
   lamps.forEach((p, i) => pools.setMatrixAt(i, mat(p.x, -0.04, p.z, 0, 0, 0, 13, 1, 13)));
   pools.layers.set(LAYER_NOREFL);
   scene.add(pools);
@@ -405,15 +405,15 @@ function buildSkyline() {
 }
 const AVIATION = [];
 
-/* ---------- sky: blue hour, clouds lit from below by the city ---------- */
+/* ---------- sky: blue hour, clouds lit from below by the city; by day, washed blue and heaped cloud ---------- */
 function buildSky() {
   const m = new THREE.ShaderMaterial({
-    uniforms: { uTime: U.uTime },
+    uniforms: { uTime: U.uTime, uDay: U.uDay, uSunDir: { value: SUN.dir } },
     vertexShader: /* glsl */`
       varying vec3 vDir;
       void main(){ vDir = position; vec4 p = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * p; gl_Position.z = gl_Position.w * 0.99999; }`,
     fragmentShader: /* glsl */`
-      varying vec3 vDir; uniform float uTime;
+      varying vec3 vDir; uniform float uTime, uDay; uniform vec3 uSunDir;
       float hs(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float ns(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f*f*(3.0-2.0*f); return mix(mix(hs(i), hs(i+vec2(1,0)), u.x), mix(hs(i+vec2(0,1)), hs(i+vec2(1,1)), u.x), u.y); }
       float fbm(vec2 p){ float s = 0.0, a = 0.5; for (int i = 0; i < 5; i++){ s += a * ns(p); p = p * 2.03 + 7.1; a *= 0.5; } return s; }
@@ -442,6 +442,18 @@ function buildSky() {
           col += vec3(0.5, 0.52, 0.6) * pow(mm, 900.0) * (1.0 - cloud * 0.8) + vec3(0.05, 0.055, 0.07) * pow(mm, 18.0);
         } else {
           col = mix(hor * 0.7, vec3(0.02), smoothstep(0.0, -0.2, h));
+        }
+        if (uDay > 0.0) {
+          vec3 dhor = vec3(0.5, 0.6, 0.72);
+          vec3 day = mix(dhor, vec3(0.07, 0.17, 0.42), pow(clamp(h, 0.0, 1.0), 0.55));
+          float sd = max(dot(d, uSunDir), 0.0);
+          day += vec3(1.0, 0.86, 0.66) * (pow(sd, 8.0) * 0.45 + pow(sd, 200.0) * 1.5) + vec3(40.0, 37.0, 32.0) * smoothstep(0.99985, 0.99993, sd);
+          if (h > 0.0) {
+            float c = fbm((d.xz / (h + 0.1) * 0.7 + vec2(uTime * 0.01, uTime * 0.004)) * 0.5);
+            vec3 cc = mix(vec3(0.42, 0.45, 0.5), vec3(1.05, 1.02, 0.98) * (0.6 + 0.5 * pow(sd, 3.0)), smoothstep(0.5, 0.85, c));
+            day = mix(day, cc, smoothstep(0.5, 0.75, c) * smoothstep(0.0, 0.12, h) * 0.92);
+          } else day = mix(dhor * 0.85, vec3(0.25, 0.26, 0.27), smoothstep(0.0, -0.2, h));
+          col = mix(col, day, uDay);
         }
         gl_FragColor = vec4(col, 1.0);
       }`,
