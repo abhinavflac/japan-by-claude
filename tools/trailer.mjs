@@ -16,37 +16,37 @@ const only = opt('only', null)?.split(',').map(Number);
 // The edit. cam: a camera (u0 → u1 over the clip, world time t at the clip's start); pose: a path defined below.
 // sec: length in seconds. cap: lower-third caption. fadeIn/fadeOut: seconds of dip to black.
 const EDIT = [
-  { cam: 7, u0: 0.15, u1: 0.55, t: 31, sec: 1.6, cap: 7 },
-  { cam: 4, u0: 0.2, u1: 0.5, t: 44, sec: 1.4, cap: 4 },
-  { cam: 20, u0: 0.05, u1: 0.3, t: 60, sec: 1.3, cap: 20 },
-  { cam: 3, u0: 0.35, u1: 0.75, t: 75, sec: 1.3, cap: 3 },
-  { cam: 8, u0: 0.0, u1: 1.0, t: 90, sec: 6.0, title: true },
-  { pose: 'alley', t: 120, sec: 4.0, cap: ['DRONE', 'Akari Yokochō', '横丁'] },
+  { cam: 20, u0: 0.1, u1: 0.45, t: 31, sec: 1.4, cap: 20 },
+  { cam: 4, u0: 0.2, u1: 0.5, t: 44, sec: 1.3, cap: 4 },
+  { cam: 7, u0: 0.2, u1: 0.55, t: 52, sec: 1.4, cap: 7 },
+  { cam: 21, u0: 0.05, u1: 0.3, t: 60, sec: 1.2, cap: 21 },
+  { cam: 3, u0: 0.35, u1: 0.75, t: 75, sec: 1.2, cap: 3 },
+  { cam: 8, u0: 0.0, u1: 1.0, t: 90, sec: 5.5, title: true },
+  { pose: 'alley', t: 120, sec: 3.6, cap: ['DRONE', 'Akari Yokochō', '横丁'] },
   { cam: 18, u0: 0.35, u1: 0.95, t: 140, sec: 3.2, cap: 18 },
   { pose: 'shrine', t: 160, sec: 3.4, cap: ['STEADICAM', 'The Shrine', '鳥居'] },
-  { pose: 'viaduct', t: 177, sec: 4.2, cap: ['CRANE', 'The Viaduct', '高架'] },
-  { cam: 1, u0: 0.1, u1: 0.9, t: 200, sec: 3.4, cap: 1 },
-  { cam: 15, u0: 0.3, u1: 0.6, t: 215, sec: 1.8, cap: 15 },
-  { cam: 17, u0: 0.25, u1: 0.65, t: 230, sec: 2.8, cap: 17, attach: true },
-  { cam: 19, u0: 0.45, u1: 1.0, t: 250, sec: 3.0, cap: 19 },
+  { pose: 'viaduct', t: 181.5, sec: 3.8, cap: ['CRANE', 'The Viaduct', '高架'] },
+  { cam: 1, u0: 0.1, u1: 0.9, t: 200, sec: 3.0, cap: 1 },
+  { cam: 15, u0: 0.3, u1: 0.6, t: 215, sec: 1.6, cap: 15 },
+  { cam: 17, u0: 0.25, u1: 0.65, t: 230, sec: 2.8, cap: 17 },
+  { cam: 19, u0: 0.45, u1: 1.0, t: 250, sec: 2.6, cap: 19 },
   { cam: 6, u0: 0.0, u1: 1.0, t: 265, sec: 2.8, cap: 6 },
-  { cam: 21, u0: 0.1, u1: 0.55, t: 280, sec: 3.6, cap: 21, fadeOut: 0.5 },
-  { pose: 'flyover', t: 300, sec: 4.2, day: true, fadeIn: 0.4, cap: ['DRONE · 08:42', 'The Same Street, by Day', '空撮'] },
+  { cam: 22, u0: 0.1, u1: 0.55, t: 280, sec: 3.2, cap: 22, fadeOut: 0.5 },
+  { cam: 8, u0: 0.15, u1: 0.85, t: 300, sec: 3.8, day: true, fadeIn: 0.4, cap: ['DRONE · 08:42', 'The Same Street, by Day', '空撮'] },
   { cam: 2, u0: 0.2, u1: 0.8, t: 320, sec: 2.4, day: true, cap: 2 },
   { cam: 9, u0: 0.3, u1: 0.8, t: 335, sec: 2.4, day: true, cap: 9 },
   { cam: 11, u0: 0.2, u1: 0.5, t: 350, sec: 1.1, filter: 'noir', cap: ['LOOK', 'Noir', ''] },
   { cam: 5, u0: 0.3, u1: 0.6, t: 360, sec: 1.1, filter: 'anime', cap: ['LOOK', 'Anime', ''] },
-  { cam: 10, u0: 0.3, u1: 0.6, t: 370, sec: 1.1, filter: 'thermal', cap: ['LOOK', 'Thermal', ''] },
-  { cam: 1, u0: 0.4, u1: 0.7, t: 380, sec: 1.1, filter: 'tiltshift', cap: ['LOOK', 'Tilt-Shift', ''] },
-  { cam: 24, u0: 0.12, u1: 0.8, t: 400, sec: 6.0, end: true, fadeOut: 1.2 },
+  { cam: 2, u0: 0.4, u1: 0.7, t: 370, sec: 1.1, filter: 'vhs', cap: ['LOOK', 'VHS', ''] },
+  { cam: 6, u0: 0.3, u1: 0.6, t: 380, sec: 1.1, filter: 'tilt', cap: ['LOOK', 'Tilt-Shift', ''] },
+  { cam: 24, u0: 0.12, u1: 0.8, t: 400, sec: 5.0, end: true, fadeOut: 1.2 },
 ];
 
 // Extra camera paths, in the page's own coordinates (x across the street, east positive; z along it, the arch at +38).
 const POSES = `({
-  alley(k) { const e = e3(k); const p = lv(V3(38, 10.5, -5.8), V3(12.5, 4.6, -5.75), e); return pose(p, lv(V3(14, 0.5, -5.8), V3(-6, 2.2, -6.0), e), { mm: 24, T: 4, focus: 14 }); },
+  alley(k) { const e = e3(k); const p = lv(V3(31, 4.4, -5.75), V3(9.5, 3.5, -5.8), e); return pose(p, lv(V3(10, 2.2, -5.8), V3(-6, 2.6, -6.0), e), { mm: 24, T: 4, focus: 14 }); },
   shrine(k) { const e = e3(k); const p = lv(V3(2.6, 1.55, -19.5), V3(-1.2, 1.7, -22.3), e); return pose(p, V3(-9.4, 2.2, -24.1), { mm: 32, T: 2, focus: focusTo(p, V3(-6.45, 2, -24)) }); },
-  viaduct(k) { const e = e3(k); const p = lv(V3(0.4, 3.2, -66), V3(0.2, 8.8, -78), e); return pose(p, lv(V3(0, 4.5, -110), V3(0, 6.5, -110), e), { mm: 28, T: 4, focus: 32 }); },
-  flyover(k) { const e = e3(k); const p = lv(V3(-26, 34, -78), V3(-9, 17, 12), e); return pose(p, lv(V3(0, 0, -30), V3(3, 1, 30), e), { mm: 24, T: 8, focus: 60 }); },
+  viaduct(k) { const e = e3(k); const p = lv(V3(0.3, 6.2, -80), V3(0.2, 8.8, -87), e); return pose(p, V3(0, 6.6, -110), { mm: 28, T: 4, focus: 26 }); },
 })`;
 
 const page = await launch({ width: RW, height: RH, query: 'test=1&q=high' });
@@ -123,7 +123,7 @@ await ev(`
     }
     // the title, over the drone shot
     if (c.title) {
-      const a = sstep(0.5, 1.4, t) * (1 - sstep(4.9, 5.8, t));
+      const a = sstep(0.5, 1.4, t) * (1 - sstep(4.5, 5.3, t));
       if (a > 0.001) {
         g.globalAlpha = a; g.letterSpacing = '0px';
         const sc = g.createLinearGradient(0, 0, W * 0.62, 0); sc.addColorStop(0, 'rgba(0,0,0,0.5)'); sc.addColorStop(1, 'rgba(0,0,0,0)');
@@ -137,7 +137,7 @@ await ev(`
     }
     // the end card
     if (c.end) {
-      const a = sstep(2.2, 3.2, t) * (1 - sstep(c.sec - 0.9, c.sec - 0.2, t));
+      const a = sstep(1.4, 2.2, t) * (1 - sstep(c.sec - 0.9, c.sec - 0.2, t));
       if (a > 0.001) {
         g.globalAlpha = a; g.textAlign = 'center'; g.shadowColor = 'rgba(0,0,0,0.6)'; g.shadowBlur = 16 * s;
         g.fillStyle = ink; g.font = '500 ' + 26 * s + 'px ' + FONTS.latin; g.letterSpacing = 10.9 * s + 'px';
